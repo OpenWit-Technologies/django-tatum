@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     "django_filters",
     "rest_framework",
     # Local
-    "users",
+    "apps.users",
 ]
 
 SITE_ID = 1
