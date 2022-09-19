@@ -132,7 +132,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-starter/config/.env
+django_tatum/config/.env
 
 # Spyder project settings
 .spyderproject

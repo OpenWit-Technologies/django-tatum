@@ -15,6 +15,9 @@ Here is the poetry doc for installing dependencies to the project:
 
 > poetry config virtualenvs.in-project true
 
+3. To activate virtualenv from default directory of installation:
+> source $(poetry env info --path)/bin/activate
+
 3. For populating requirements.txt, use this command:
 	> poetry export -f requirements.txt --output requirements.txt
 
