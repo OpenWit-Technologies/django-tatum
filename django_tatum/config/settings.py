@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "rest_framework",
     # Local
     "apps.users",
+    "apps.tatum",
 ]
 
 SITE_ID = 1
@@ -92,6 +93,9 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "config.wsgi.application"
+
+
+# AUTH_USER_MODEL = "users.User"
 
 
 # DATABASES
