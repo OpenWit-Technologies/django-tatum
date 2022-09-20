@@ -1,6 +1,6 @@
 from django_tatum.apps.tatum.tatum_client import creds
-from utils.requestHandler import RequestHandler
-import utils.utility as utils
+from django_tatum.apps.tatum.utils.requestHandler import RequestHandler
+import django_tatum.apps.tatum.utils.utility as utils
 
 
 class Marketplace:
