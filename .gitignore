@@ -133,7 +133,8 @@ ENV/
 env.bak/
 venv.bak/
 django_tatum/config/.env
-
+.vscode/*
+.vscode/
 # Spyder project settings
 .spyderproject
 .spyproject
