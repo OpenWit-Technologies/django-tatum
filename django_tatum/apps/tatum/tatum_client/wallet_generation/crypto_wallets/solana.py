@@ -1,5 +1,6 @@
-from tatum_client import creds
-from utils.requestHandler import RequestHandler
+# from tatum.tatum_client import creds
+from django_tatum.apps.tatum.tatum_client import creds
+from django_tatum.apps.tatum.utils.requestHandler import RequestHandler
 
 requestUrl = f"{creds.TATUM_BASE_URL}solana/wallet"
 
@@ -25,3 +26,6 @@ def generate_solana_wallet():
     return response.json()
 
 
+if __name__ == "__main__":
+    sol_wallet = generate_solana_wallet()
+    print(sol_wallet)

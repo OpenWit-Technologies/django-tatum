@@ -1,0 +1,9 @@
+version: '3'
+services:
+  tatum-kms:
+    image: tatumio/tatum-kms
+    env_file: ./django_tatum/config/.env
+    volumes:
+      - .:/root/.tatumrc
+    stdin_open: true
+    tty: true

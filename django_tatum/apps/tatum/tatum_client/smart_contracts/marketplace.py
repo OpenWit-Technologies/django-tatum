@@ -4,7 +4,6 @@ import django_tatum.apps.tatum.utils.utility as utils
 
 
 class Marketplace:
-    
     def __init__(self):
         self.requestUrl = f"{creds.TATUM_BASE_URL}blockchain/marketplace/listing"
         self.Handler = RequestHandler(
@@ -14,7 +13,15 @@ class Marketplace:
                 "x-api-key": creds.TATUM_API_KEY,
             },
         )
-        
-    def create_marketplace_contract_onchain(self, chain: str, feeRecipient: str, marketplaceFee: int, fromPrivateKey: str, nonce: int=None, fee: dict=None):
-        
+
+    def create_marketplace_contract_onchain(
+        self,
+        chain: str,
+        feeRecipient: str,
+        marketplaceFee: int,
+        fromPrivateKey: str,
+        nonce: int = None,
+        fee: dict = None,
+    ):
+
         pass

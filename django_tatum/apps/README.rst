@@ -26,5 +26,24 @@ Here is the poetry doc for installing dependencies to the project:
 5. [Running cron jobs with django extensions]('https://django-extensions.readthedocs.io/en/latest/jobs_scheduling.html'){target="_blank"}
 6. [Graphene bug fix]('https://stackoverflow.com/questions/70382084/import-error-force-text-from-django-utils-encoding'){target="_blank"}
 
+===========================
+Quick Start
+===========================
 
+1. Add "tatum" to your INSTALLED_APPS setting like this::
 
+    INSTALLED_APPS = [
+        ...,
+        "tatum",
+    ]
+
+2. Include the tatum URLconf in your project urls.py like this::
+
+    path("tatum/", include("tatum.urls")),
+
+3. Run ``python manage.py migrate`` to create the models.
+
+4. Start the development server and visit http://127.0.0.1:8000/admin/
+   to create a poll (you'll need the Admin app enabled).
+
+5. Visit http://127.0.0.1:8000/tatum/

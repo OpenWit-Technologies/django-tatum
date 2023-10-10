@@ -1,0 +1,21 @@
+{
+  "name": "django-tatum",
+  "version": "1.0.0",
+  "description": "This package enables Web3 developers to build crypto apps with Django & Tatum.",
+  "main": "index.js",
+  "scripts": {
+    "start": "react-scripts --openssl-legacy-provider start",
+    "build": "react-scripts --openssl-legacy-provider build",
+    "build_local": "react-scripts build",
+    "local": "react-scripts start",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "keywords": [
+    "tatum",
+    "blockchain",
+    "web3"
+  ],
+  "author": "Wale Opakunle",
+  "license": "MIT"
+}
