@@ -1,6 +1,5 @@
-from tatum_client import creds
-from utils.requestHandler import RequestHandler
-
+from django_tatum.apps.tatum.tatum_client import creds
+from django_tatum.apps.tatum.utils.requestHandler import RequestHandler
 
 class PolygonMatic():
     def __init__(self) -> None:
@@ -43,5 +42,4 @@ class PolygonMatic():
         )
         response = private_key_handler.post(data=payload)
         return response.json()
-
 
