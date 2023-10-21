@@ -20,10 +20,14 @@ class CustomerRegistrationDict(TypedDict, total=False):
     providerCountry: str
 
 
-class BatchAccountDict(TypedDict, total=False):
+class CreateAccountDict(TypedDict, total=False):
     currency: str
     customer: CustomerRegistrationDict
     compliant: bool
     accountCode: str
-    account_currency: str
+    accountingCurrency: str
     accountNumber: str
+
+
+class BatchAccountDict(CreateAccountDict):
+    pass

@@ -3,6 +3,7 @@ from django_tatum.apps.tatum.tatum_client import creds
 from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import (
     AccountQueryDict,
     BatchAccountDict,
+    CreateAccountDict,
 )
 from django_tatum.apps.tatum.utils.requestHandler import RequestHandler
 
@@ -18,7 +19,7 @@ class TatumVirtualAccounts:
             },
         )
 
-    def generate_virtual_account(self, data: dict):
+    def generate_virtual_account_no_xpub(self, data: CreateAccountDict):
         response = self.Handler.post(data)
         return response.json()
 
@@ -65,6 +66,28 @@ class TatumVirtualAccounts:
         print(response.json())
         return response.json()
 
+    def list_all_customer_accounts(
+        self,
+        account_id: str,
+        account_code: str = None,
+        page_size: int = 10,
+        offset: int = 0,
+    ):
+        self.Handler.url = f"{self.requestUrl}/customer/{account_id}"
+        self.Handler.headers.pop("Content-Type")
+        print(self.Handler.headers)
+        query: dict = {
+            "pageSize": page_size,
+        }
+
+        if account_code:
+            query["accountCode"] = account_code
+        if offset:
+            query["offset"] = offset
+
+        response = self.Handler.get(params=query)
+        return response.json()
+
 
 payload = {
     "accounts": [
@@ -78,7 +101,7 @@ payload = {
             },
             "compliant": True,
             "accountCode": "123456789",
-            "accountCurrency": "USD",
+            "accountingCurrency": "USD",
             "accountNumber": "123456789",
         },
     ]
@@ -90,4 +113,5 @@ if __name__ == "__main__":
     # print(tva.list_all_virtual_accounts())
     # print(tva.get_account_entities_count())
     # print(tva.get_account_balance(account_id="0x1c0a4c3c7a3e2c6a1b3d6c4b7b3f9b7c9b1c0a4c3c7a3e2c6a1b3d6c4b7b3f9b7c9"))
-    print(tva.create_batch_accounts(accounts=payload["accounts"]))
+    # print(tva.create_batch_accounts(accounts=payload["accounts"]))
+    print(tva.list_all_customer_accounts(account_id="653307d18c610c9e0ef45940"))
