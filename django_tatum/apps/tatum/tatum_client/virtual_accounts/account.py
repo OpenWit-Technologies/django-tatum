@@ -75,7 +75,6 @@ class TatumVirtualAccounts:
     ):
         self.Handler.url = f"{self.requestUrl}/customer/{account_id}"
         self.Handler.headers.pop("Content-Type")
-        print(self.Handler.headers)
         query: dict = {
             "pageSize": page_size,
         }
