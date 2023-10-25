@@ -31,3 +31,9 @@ class CreateAccountDict(TypedDict, total=False):
 
 class BatchAccountDict(CreateAccountDict):
     pass
+
+
+class UpdateAccountDict(TypedDict):
+    id: str
+    accountCode: str
+    accountNumber: str

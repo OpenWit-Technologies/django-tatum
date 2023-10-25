@@ -3,7 +3,7 @@ from utils.requestHandler import RequestHandler
 import utils.utility as utils
 
 
-class TatumTransactions:
+class TatumTransactions():
     def __init__(self):
         self.requestUrl = f"{creds.TATUM_BASE_URL}ledger/transaction"
         self.Handler = RequestHandler(
@@ -241,7 +241,7 @@ class TatumTransactions:
         account: str = None,
         counterAccount: str = None,
         currency: str = None,
-        startDate: int = None,  ## represents 'from' on tatum's side
+        startDate: int = None,  # represents 'from' on tatum's side
         amount: list = None,
         to: int = None,
         currencies: list = None,
