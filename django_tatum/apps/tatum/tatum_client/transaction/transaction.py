@@ -1,6 +1,6 @@
-from tatum_client import creds
-from utils.requestHandler import RequestHandler
-import utils.utility as utils
+from django_tatum.apps.tatum.tatum_client import creds
+from django_tatum.apps.tatum.utils.requestHandler import RequestHandler
+import django_tatum.apps.tatum as utils
 
 
 class TatumTransactions:
@@ -321,3 +321,4 @@ class TatumTransactions:
 
         response = Handler.get()
         return response.json()
+    

@@ -1,5 +1,5 @@
-from tatum_client import creds
-from utils.requestHandler import RequestHandler
+from django_tatum.apps.tatum.tatum_client import creds
+from django_tatum.apps.tatum.utils.requestHandler import RequestHandler
 
 
 class PolygonMatic():
@@ -43,5 +43,10 @@ class PolygonMatic():
         )
         response = private_key_handler.post(data=payload)
         return response.json()
+    
+if __name__ == "__main__":
+    polygon = PolygonMatic()
+    pol_wallet = polygon.generate_polygon_wallet()
+    print(pol_wallet)
 
 

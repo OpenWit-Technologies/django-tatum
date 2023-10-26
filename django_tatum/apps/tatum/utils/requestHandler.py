@@ -9,7 +9,7 @@ class RequestHandler:
     def get(self, *args, **kwargs):
         return requests.get(self.url, headers=self.headers, *args, **kwargs)
 
-    def post(self, data, *args, **kwargs):
+    def post(self, data = None, *args, **kwargs):
         return requests.post(self.url, headers=self.headers, json=data, *args, **kwargs)
 
     def put(self, data, *args, **kwargs):

@@ -1,5 +1,5 @@
-from tatum_client import creds
-from utils.requestHandler import RequestHandler
+from django_tatum.apps.tatum.tatum_client import creds 
+from django_tatum.apps.tatum.utils.requestHandler import RequestHandler
 
 
 class TatumCustomer:
@@ -81,3 +81,12 @@ class TatumCustomer:
         Handler = RequestHandler(requestUrl, {"Content-Type": "application/json", "x-api-key": creds.TATUM_API_KEY})
 
         return Handler.put()
+    
+if __name__ == "__main__":
+    tatum_customer_account = TatumCustomer()
+    pageSize = 5
+    offset = 0
+    tca = tatum_customer_account.list_all_customers(pageSize, offset)
+    print(tca)
+    
+
