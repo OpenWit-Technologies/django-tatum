@@ -4,9 +4,10 @@ Topic: Startup instructions
 ---
 
 
-1. Please see this article on using poetry to manage virtualenvironments:
+1. Please see these articles on using poetry to manage virtualenvironments:
 
-[Using to Poetry with Django]("https://rasulkireev.com/managing-django-with-poetry/"){target="_blank"}
+a. [Using to Poetry with Django]("https://rasulkireev.com/managing-django-with-poetry/"){target="_blank"}
+b. [Dependency Management with Python Poetry](https://realpython.com/dependency-management-python-poetry/){target="_blanck"}
 
 Here is the poetry doc for installing dependencies to the project:
 ["https://python-poetry.org/docs/basic-usage/#installing-dependencies"]{target="_blank"}
@@ -27,4 +28,9 @@ Here is the poetry doc for installing dependencies to the project:
 6. [Graphene bug fix]('https://stackoverflow.com/questions/70382084/import-error-force-text-from-django-utils-encoding'){target="_blank"}
 
 
+# Running the application
 
+# Working with Tatum KMS
+[Tatum KMS Docs](https://docs-v3.tatum.io/private-key-management/tatum-key-management-system-kms)
+KMS securely stores private keys and mnemonics of blockchain wallets.
+KMS periodically pulls pending transactions to sign from Tatum, signs them locally using the stored private keys and mnemonics, and broadcasts them to the blockchain.
