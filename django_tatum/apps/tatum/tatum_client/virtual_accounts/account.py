@@ -1,21 +1,15 @@
 import json
-from typing import Any, Union
 
+from typing import Any
+from typing import Union
 from requests import Response
-from django_tatum.apps.tatum.tatum_client.exceptions.virtual_account_exceptions import (
-    MissingparameterException,
-)
 
-# from django_tatum.apps.tatum.tatum_client import creds
-from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import (
-    AccountQueryDict,
-    BatchAccountDict,
-    CreateAccountDict,
-    UpdateAccountDict,
-)
-from django_tatum.apps.tatum.tatum_client.virtual_accounts.base import (
-    BaseRequestHandler,
-)
+from .base import BaseRequestHandler
+from ..exceptions import MissingparameterException
+from ..types import AccountQueryDict
+from ..types import BatchAccountDict
+from ..types import CreateAccountDict
+from ..types import UpdateAccountDict
 
 
 class TatumVirtualAccounts(BaseRequestHandler):
@@ -162,9 +156,20 @@ class TatumVirtualAccounts(BaseRequestHandler):
     def update_virtual_account(
         self,
         account_id: str,
-        account_code: str,
-        account_number: str,
+        account_code: str = None,
+        account_number: str = None,
     ):
+        """Update the account code or account number from an external system.
+
+        Args:
+            account_id (str): The Account ID of the account to be updated.
+            account_code Optional(str): The new account code to be associated
+                with the account ID.
+            account_number Optional(str): The new account
+
+        Returns:
+            _type_: _description_
+        """
         self.setup_request_handler(f"ledger/account/{account_id}")
         payload: UpdateAccountDict = {
             "id": account_id,
@@ -187,23 +192,30 @@ class TatumVirtualAccounts(BaseRequestHandler):
     ):
         """Blocks an amount in an account.
         Any number of distinct amounts can be blocked in one account.
-        Every new blockage has its own distinct ID, which is used as a reference.
-        When the amount is blocked, it is debited from the available balance of the account.
-        The account balance remains the same.
-        The account balance represents the total amount of funds in the account.
-        The available balance represents the total amount of funds that can be used to perform transactions.
-        When an account is frozen, the available balance is set to 0 minus all blockages for the account.
+        Every new blockage has its own distinct ID,
+        which is used as a reference.
 
-        The amount can be blocked even if the amount supplied does not exist in the account.
+        When the amount is blocked, it is debited from the available balance
+        of the account. The account balance remains the same.
+        The account balance represents the total amount of
+        funds that are not yet withdrawn or transferred to other accounts.
+
+        The available balance represents the total amount of funds that
+        can be used to perform transactions.
+        When an account is frozen, the available balance is set to:
+        (0 - all blockages applied the account).
+        That is, if a blockage of 10 is set to an account with 0 balance,
+        the available balance is set to -10.
+        The amount can be blocked even if the amount being blocked
+        does not exist in the account.
 
         Args:
             id (str): Account ID
             amount (str): The amount to be blocked on the amount.
-            type (str[list[int]]): The type of the blockage that you are applying.
-
+            type (str[list[int]]): The type of the blockage to be applied.
                 Could be codes or identifiers from you external system.
-            description (str, optional): The description of the blockage that you are applying.
-                Defaults to None.
+            description (str, optional): The description of the blockage
+                being applied. Defaults to None.
 
         Returns:
             _type_: _description_
@@ -333,11 +345,10 @@ if __name__ == "__main__":
     #     )
     # )
 
-    print(
-        tva.unblock_amount_and_perform_transaction(
-            blockage_id="65386475d8b1ad42ce2af684",
-            recipientAccountId="6533086644a445035296fe18",
-            amount="1",
-        )
-    ) # Not tried this out. TODO: Need to add money from faucets perhaps.
-
+    # print(
+    #     tva.unblock_amount_and_perform_transaction(
+    #         blockage_id="65386475d8b1ad42ce2af684",
+    #         recipientAccountId="6533086644a445035296fe18",
+    #         amount="1",
+    #     )
+    # )  # Not tried this out. TODO: Need to add money from faucets perhaps.
