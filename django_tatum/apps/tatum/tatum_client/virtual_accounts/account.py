@@ -12,6 +12,9 @@ from ..types import CreateAccountDict
 from ..types import UpdateAccountDict
 
 
+# TODO: Modify all methods to handle all respnse types
+
+
 class TatumVirtualAccounts(BaseRequestHandler):
     def __init__(self):
         self.setup_request_handler("ledger/account")
@@ -239,13 +242,56 @@ class TatumVirtualAccounts(BaseRequestHandler):
         recipientAccountId: str,
         amount: str,
         anonymous: bool = False,
-        compliant: bool = None,
+        compliant: bool = True,
         transaction_code: str = None,
         payment_id: str = None,
         recipient_note: str = None,
-        base_rate: int = None,
+        base_rate: int = 1,
         sender_note: str = None,
-    ):
+    ) -> dict[str, str]:
+        """Unblocks a previously blocked amount in an account and invokes a ledger transaction from that
+        account to a different recipient. If the request fails, the amount is not unblocked.
+
+        Args:
+            blockage_id (str): Blockage ID
+
+            recipientAccountId (str): Recipient account ID within Tatum Platform
+
+            amount (str): Amount to be sent. Amount can be smaller than the blocked amount.
+
+            anonymous (bool, optional): Anonymous transaction does not show sender account to recipient. \
+                Defaults to False.
+
+            compliant (bool, optional): Enable compliant checks. The transaction will not be processed \
+                if compliant check fails. \
+                    Defaults to True.
+
+            transaction_code (str, optional): For bookkeeping to distinct transaction purpose. \
+                Defaults to None.
+
+            payment_id (str, optional): Payment ID, External identifier of the payment,\
+                which can be used to pair transactions within Tatum accounts. Defaults to None.
+
+            recipient_note (str, optional): A note that will be visible to both sender and recipient. \
+                Defaults to None.
+
+            base_rate (int, optional): Exchange rate of the base pair. \
+                Only applicable for Tatum's Virtual currencies Ledger transactions. \
+                    Override default exchange rate for the Virtual Currency. \
+                        Defaults to 1.
+
+            sender_note (str, optional): Note visible to sender. should be between 1 and 500 characters long. \
+                Defaults to None.
+
+        Returns:
+            dict[str, str]: A dictionary containing the reference to the transaction.
+                200 Response Sample:
+                {
+                    "reference": "0c64cc04-5412-4e57-a51c-ee5727939bcb"
+                }
+                The reference is a unique identifier of the transaction within the virtual account);\
+                    if the transaction fails, you can use this reference to search through the Tatum logs.
+        """
         self.setup_request_handler(f"ledger/account/block/{blockage_id}")
         # Only add the optional parameters to the payload if they are supplied
         payload: dict[str, Union[str, bool, int]] = {
@@ -256,6 +302,8 @@ class TatumVirtualAccounts(BaseRequestHandler):
 
         if compliant:
             payload["compliant"] = compliant
+        else:
+            raise ValueError("This transaction will fail because 'compliance' is set to a 'False' value.")
         if transaction_code:
             payload["transactionCode"] = transaction_code
         if payment_id:
@@ -277,7 +325,220 @@ class TatumVirtualAccounts(BaseRequestHandler):
             return content
         return response.json()
 
+    def unblock_amount_in_an_account(
+        self,
+        blockage_id: str,
+    ) -> dict[str, str]:
+        """Unblocks a previously blocked amount in an account.
+            Increases the available balance in the account where
+            the amount was originally blocked.
 
+        Args:
+            blockage_id (str): The blocakge ID obtained from a previous amount
+                blocking operation.
+
+        Returns:
+            dict[str, str]: A dictionary containing the status code and message.
+                200 Response Sample:
+                    {
+                        "message": "Amount unblocked successfully.",
+                        "status_code": 200,
+                    }
+        """
+        self.setup_request_handler(f"ledger/account/block/{blockage_id}")
+        response: Response = self.Handler.delete()
+        if response.status_code == 200:
+            response_object: dict[str, str] = {
+                "message": "Amount unblocked successfully.",
+                "status_code": 200,
+            }
+            return response_object
+        return response.json()
+
+    def get_blocked_amounts_for_an_account(
+        self,
+        account_id: str,
+        page_size: int = 10,
+        offset: int = None,
+    ):
+        """Gets blocked amounts for an account.
+
+        Args:
+            account_id (str): The account ID on Tatum.
+            page_size (int, optional): How many accounts should be returned in
+            a single request. Defaults to 10.
+            Max possible value is 50.
+            offset (int, optional): Offset to obtain the next page of data.
+            Defaults to None, which Tatum interpretes as offset=0.
+
+        Raises:
+            ValueError: If a value greater than 50 is passed for page-size,
+            a value error is returned to save the user the round trip to Tatum,
+            who will eventually return a 400 response :).
+
+        Returns:
+            list[dict[str, str]]: An array of blockage ids & blockage details.
+                200 Response Sample:
+                [
+                    {
+                        "id": "5e68c66581f2ee32bc354087",
+                        "accountId": "5e68c66581f2ee32bc354087",
+                        "amount": "5",
+                        "type": "DEBIT_CARD_OP",
+                        "description": "Card payment in the shop."
+
+                    }
+                ]
+
+                id (str): The ID of the blockage
+                accountId (str): The ID of the account where the
+                                amount is blocked
+                amount (str): The amount blocked on the account
+                type (str): The type of the blockage supplied when the amount was blocked;
+                            This can be a code or an identifier from an external
+                            system or a short description of the blockage.
+                description (str): The description provided during the blocakge.
+        """
+        if page_size > 50:
+            raise ValueError("Page size cannot be greater than 50.")
+
+        self.setup_request_handler(f"ledger/account/block/{account_id}")
+        query: dict = {
+            "pageSize": page_size,
+        }
+
+        if offset:
+            query["offset"] = offset
+
+        response: Response = self.Handler.get(params=query)
+        print(response)
+        return response.json()
+
+    def get_blocked_amount_by_id(
+        self,
+        blockage_id: str,
+    ) -> dict["str, str"]:
+        """Gets blocked amount by id.
+
+        Returns:
+            dict[str, str]: The response object from Tatum.
+                200 Response Sample:
+                {
+                    "id": "5e68c66581f2ee32bc354087",
+                    "accountId": "5e68c66581f2ee32bc354087",
+                    "amount": "5",
+                    "type": "DEBIT_CARD_OP",
+                    "description": "Card payment in the shop."
+
+                }
+
+                id (str): The ID of the blockage
+                accountId (str): The ID of the account where the
+                        amount is blocked
+                amount (str): The amount blocked on the account
+                type (str): The ID of the blockage
+                description (str): The ID of the blockage
+        """
+        self.setup_request_handler(f"ledger/account/block/{blockage_id}/detail")
+        response: Response = self.Handler.get()
+        return response.json()
+
+    def activate_account(
+        self,
+        account_id: str,
+    ) -> dict[str, Union[str, int]]:
+        """Activates an account.
+
+        Args:
+            account_id (str): The account ID to be activated.
+
+        Returns:
+            dict[str, str]: _description_
+        """
+        self.setup_request_handler(f"ledger/account/{account_id}/activate")
+        response: Response = self.Handler.post()
+        if response.status_code == 204:
+            response_object: dict[str, str] = {
+                "message": "Account activated successfully.",
+                "status_code": 200,
+            }
+            return response_object
+        return response.json()
+
+    def deactivate_account(
+        self,
+        account_id: str,
+    ) -> dict[str, Union[str, int]]:
+        """Deactivates an account. Only accounts with account and available balances of zero can be deactivated.\
+            Deactivated accounts are not visible in the list of accounts, it is not possible to send funds to \
+            these accounts or perform transactions. \
+            However, they are still present in the ledger as well as all their transaction histories.
+
+        Args:
+            account_id (str): The account ID to be deactivated.
+
+        Returns:
+            dict[str, str]: _description_
+        """
+        self.setup_request_handler(f"ledger/account/{account_id}/deactivate")
+        response: Response = self.Handler.post()
+        if response.status_code == 204:
+            response_object: dict[str, Union[str, int]] = {
+                "message": "Account deactivated successfully.",
+                "status_code": 200,
+            }
+            return response_object
+        return response.json()
+
+    def freeze_account(self, account_id: str,) -> dict[str, Union[str, int]]:
+        """Disables all outgoing transactions. \
+        Incoming transactions to the account are available.
+        When an account is frozen, its available balance is set to 0.
+        This operation will create a new blockage of type ACCOUNT_FROZEN, which is automatically \
+            deleted when the account is unfrozen.
+
+        Args:
+            account_id (str): The account ID to be frozen.
+
+        Returns:
+            dict[str, str]: _description_
+        """
+        self.setup_request_handler(f"ledger/account/{account_id}/freeze")
+        response: Response = self.Handler.post()
+        if response.status_code == 204:
+            response_object: dict[str, Union[str, int]] = {
+                "message": "Account frozen successfully.",
+                "status_code": 200,
+            }
+            return response_object
+        return response.json()
+
+    def unfreeze_account(self, account_id: str,) -> dict[str, Union[str, int]]:
+
+        """Unfreezes a previously frozen account. \
+        This operation will delete the ACCOUNT_FROZEN blockage, \
+            which was created when the account was frozen.
+
+        Unfreezing a non-frozen account will not affect the account.
+
+        Args:
+            account_id (str): The account ID to be unfrozen.
+
+        Returns:
+            dict[str, str]: _description_
+        """
+        self.setup_request_handler(f"ledger/account/{account_id}/unfreeze")
+        response: Response = self.Handler.post()
+        if response.status_code == 204:
+            response_object: dict[str, Union[str, int]] = {
+                "message": "Account unfrozen successfully.",
+                "status_code": 200,
+            }
+            return response_object
+        return response.json()
+
+
+# ---
 creatr_bulk_account_payload = {
     "accounts": [
         {
