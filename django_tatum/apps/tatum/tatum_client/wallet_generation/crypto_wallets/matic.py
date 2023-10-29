@@ -1,7 +1,6 @@
 from django_tatum.apps.tatum.tatum_client import creds
 from django_tatum.apps.tatum.utils.requestHandler import RequestHandler
 
-
 class PolygonMatic():
     def __init__(self) -> None:
         self.requestUrl = f"{creds.TATUM_BASE_URL}polygon/wallet"
@@ -48,5 +47,4 @@ if __name__ == "__main__":
     polygon = PolygonMatic()
     pol_wallet = polygon.generate_polygon_wallet()
     print(pol_wallet)
-
 
