@@ -13,6 +13,8 @@ from django_tatum.apps.tatum.tatum_client.virtual_accounts.base import BaseReque
 
 
 # TODO: Modify all methods to handle all respnse types
+# TODO: Refactor "account/ledger" url prefix to avoid repetition.
+
 
 class TatumVirtualAccounts(BaseRequestHandler):
     def __init__(self):
@@ -489,7 +491,10 @@ class TatumVirtualAccounts(BaseRequestHandler):
             return response_object
         return response.json()
 
-    def freeze_account(self, account_id: str,) -> dict[str, Union[str, int]]:
+    def freeze_account(
+        self,
+        account_id: str,
+    ) -> dict[str, Union[str, int]]:
         """Disables all outgoing transactions. \
         Incoming transactions to the account are available.
         When an account is frozen, its available balance is set to 0.
@@ -512,8 +517,10 @@ class TatumVirtualAccounts(BaseRequestHandler):
             return response_object
         return response.json()
 
-    def unfreeze_account(self, account_id: str,) -> dict[str, Union[str, int]]:
-
+    def unfreeze_account(
+        self,
+        account_id: str,
+    ) -> dict[str, Union[str, int]]:
         """Unfreezes a previously frozen account. \
         This operation will delete the ACCOUNT_FROZEN blockage, \
             which was created when the account was frozen.
