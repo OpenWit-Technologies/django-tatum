@@ -23,7 +23,7 @@ class RequestHandler:
             **kwargs,
         )
 
-    def put(self, data, *args, **kwargs):
+    def put(self, data=None, *args, **kwargs):
         return requests.put(
             self.url,
             headers=self.headers,
