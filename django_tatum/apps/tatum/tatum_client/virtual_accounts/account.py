@@ -4,16 +4,15 @@ from typing import Any
 from typing import Union
 from requests import Response
 
-from .base import BaseRequestHandler
-from ..exceptions import MissingparameterException
-from ..types import AccountQueryDict
-from ..types import BatchAccountDict
-from ..types import CreateAccountDict
-from ..types import UpdateAccountDict
+from django_tatum.apps.tatum.tatum_client.exceptions.virtual_account_exceptions import MissingparameterException
+from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import AccountQueryDict
+from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import BatchAccountDict
+from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import CreateAccountDict
+from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import UpdateAccountDict
+from django_tatum.apps.tatum.tatum_client.virtual_accounts.base import BaseRequestHandler
 
 
 # TODO: Modify all methods to handle all respnse types
-
 
 class TatumVirtualAccounts(BaseRequestHandler):
     def __init__(self):
@@ -105,7 +104,7 @@ class TatumVirtualAccounts(BaseRequestHandler):
         if account_id is None:
             return f"MissingParameterErrror. {account_id} must be specified."
 
-        self.setup_request_handler(f"ledger/{account_id}/balance")
+        self.setup_request_handler(f"ledger/account/{account_id}/balance")
         response = self.Handler.get()
         return response.json()
 
@@ -124,7 +123,7 @@ class TatumVirtualAccounts(BaseRequestHandler):
         self,
         accounts: list[BatchAccountDict],
     ):
-        self.setup_request_handler("ledger/batch")
+        self.setup_request_handler("ledger/account/batch")
         payload: dict[str, Any] = {
             "accounts": accounts,
         }
@@ -584,7 +583,7 @@ if __name__ == "__main__":
     # print(tva.generate_virtual_account_no_xpub(data=create_account_payload))
     # print(tva.list_all_virtual_accounts(list_all_account_payload))
     # print(tva.get_account_entities_count())
-    # print(tva.get_account_balance(account_id="0x1c0a4c3c7a3e2c6a1b3d6c4b7b3f9b7c9b1c0a4c3c7a3e2c6a1b3d6c4b7b3f9b7c9"))
+    print(tva.get_account_balance(account_id="653307d18c610c9e0ef4593f"))
     # print(tva.create_batch_accounts(accounts=creatr_bulk_account_payload["accounts"]))
     # print(tva.list_all_customer_accounts(account_id="653307d18c610c9e0ef45940"))
 
