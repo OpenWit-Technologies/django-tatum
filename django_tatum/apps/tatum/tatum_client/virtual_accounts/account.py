@@ -12,6 +12,7 @@ from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import (
     BatchAccountDict,
     CreateAccountDict,
     UpdateAccountDict,
+    CreateAccountXpubDict,
 )
 from django_tatum.apps.tatum.tatum_client.virtual_accounts.base import (
     BaseRequestHandler,
@@ -26,7 +27,7 @@ class TatumVirtualAccounts(BaseRequestHandler):
     def generate_virtual_account_no_xpub(
         self,
         data: CreateAccountDict,
-    ) -> Response:
+    ) -> Response:    # sourcery skip: class-extract-method
         """Generate a virtual account without using an extended public key.
 
         Args:
@@ -48,6 +49,15 @@ class TatumVirtualAccounts(BaseRequestHandler):
         Returns:
             _type_: Response
         """
+        self.setup_request_handler("ledger/account")
+        response = self.Handler.post(data)
+        return response.json()
+    
+    def generate_virtual_account_with_xpub(
+        self,
+        data: CreateAccountXpubDict,
+    ) -> Response:
+
         self.setup_request_handler("ledger/account")
         response = self.Handler.post(data)
         return response.json()
@@ -108,7 +118,7 @@ class TatumVirtualAccounts(BaseRequestHandler):
         if account_id is None:
             return f"MissingParameterErrror. {account_id} must be specified."
 
-        self.setup_request_handler(f"ledger/{account_id}/balance")
+        self.setup_request_handler(f"ledger/account/{account_id}/balance")
         response = self.Handler.get()
         return response.json()
 
@@ -127,7 +137,7 @@ class TatumVirtualAccounts(BaseRequestHandler):
         self,
         accounts: list[BatchAccountDict],
     ):
-        self.setup_request_handler("ledger/batch")
+        self.setup_request_handler("ledger/account/batch")
         payload: dict[str, Any] = {
             "accounts": accounts,
         }
@@ -285,7 +295,22 @@ creatr_bulk_account_payload = {
 }
 
 create_account_payload = {
-    "currency": "BTC",
+    "currency": "ETH",
+    "customer": {
+        "externalId": "123456789",
+        "accountingCurrency": "USD",
+        "customerCountry": "US",
+        "providerCountry": "US",
+    },
+    "compliant": True,
+    "accountCode": "123456789",
+    "accountingCurrency": "USD",
+    "accountNumber": "123456789",
+}
+
+create_account_with_xpub_payload = {
+    "currency": "ETH",
+    "xpub": "xpub6FJnrHDNdwdeHxT7eNC3c2oLiCBFg6hezyrzCNrqVXGDHDqsUBbeRdGaFyJxUbqusqAFX6K2ihXJwyCQn1MX3Vrdh1ekUizUkK7PXBEuoCU",
     "customer": {
         "externalId": "123456789",
         "accountingCurrency": "USD",
@@ -309,9 +334,10 @@ list_all_account_payload = {"active": True}
 if __name__ == "__main__":
     tva = TatumVirtualAccounts()
     # print(tva.generate_virtual_account_no_xpub(data=create_account_payload))
+    # print(tva.generate_virtual_account_with_xpub(data=create_account_with_xpub_payload))
     # print(tva.list_all_virtual_accounts(list_all_account_payload))
     # print(tva.get_account_entities_count())
-    # print(tva.get_account_balance(account_id="0x1c0a4c3c7a3e2c6a1b3d6c4b7b3f9b7c9b1c0a4c3c7a3e2c6a1b3d6c4b7b3f9b7c9"))
+    # print(tva.get_account_balance(account_id="6533086644a445035296fe18"))
     # print(tva.create_batch_accounts(accounts=creatr_bulk_account_payload["accounts"]))
     # print(tva.list_all_customer_accounts(account_id="653307d18c610c9e0ef45940"))
 
@@ -341,3 +367,5 @@ if __name__ == "__main__":
     #     )
     # ) # Not tried this out. TODO: Need to add money from faucets perhaps.
 
+
+    

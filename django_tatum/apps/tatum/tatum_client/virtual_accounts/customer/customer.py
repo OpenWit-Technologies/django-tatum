@@ -82,11 +82,6 @@ class TatumCustomer:
 
         return Handler.put()
     
-if __name__ == "__main__":
-    tatum_customer_account = TatumCustomer()
-    pageSize = 5
-    offset = 0
-    tca = tatum_customer_account.list_all_customers(pageSize, offset)
-    print(tca)
+
     
 
