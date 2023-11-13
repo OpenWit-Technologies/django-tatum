@@ -1,4 +1,4 @@
-from django_tatum.apps.tatum.tatum_client import creds 
+from django_tatum.apps.tatum.tatum_client import creds
 from django_tatum.apps.tatum.utils.requestHandler import RequestHandler
 
 
@@ -41,7 +41,6 @@ class TatumCustomer:
         customerCountry: str = None,
         providerCountry: str = None,
     ):
-
         self.requestUrl = f"{creds.TATUM_BASE_URL}ledger/customer/{id}"
         self.Handler = RequestHandler(
             self.requestUrl,
@@ -58,19 +57,18 @@ class TatumCustomer:
         response = self.Handler.put(data=payload)
         return response.json()
 
-
     def activate_customer(self, id: str):
-        response = self._activation_toggle_put_request(id, '/activate')
+        response = self._activation_toggle_put_request(id, "/activate")
         return response.json()
-    
+
     def deactivate_customer(self, id: str):
-        return self._customer_id_parser(id, '/deactivate', ' deactivated successfully')
+        return self._customer_id_parser(id, "/deactivate", " deactivated successfully")
 
     def enable_customer(self, id: str):
-        return self._customer_id_parser(id, '/enable', ' enabled successfully.')
-    
+        return self._customer_id_parser(id, "/enable", " enabled successfully.")
+
     def disable_customer(self, id: str):
-        return self._customer_id_parser(id, '/disable', ' disabled successfully.')
+        return self._customer_id_parser(id, "/disable", " disabled successfully.")
 
     def _customer_id_parser(self, id, url_suffix, message_suffix):
         response = self._activation_toggle_put_request(id, url_suffix)
@@ -81,7 +79,3 @@ class TatumCustomer:
         Handler = RequestHandler(requestUrl, {"Content-Type": "application/json", "x-api-key": creds.TATUM_API_KEY})
 
         return Handler.put()
-    
-
-    
-

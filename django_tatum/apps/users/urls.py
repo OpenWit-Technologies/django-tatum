@@ -1,15 +1,13 @@
-from django.urls import path
-from django import urls
-from apps.music_publisher import views
+"""Urls for the user app."""
 from rest_framework.routers import DefaultRouter
 
-router = DefaultRouter()
-router.register(r'all-users', views.GetAllUsers,basename = 'all-users')
+# from django_tatum.apps.users import views
 
-router.register(r'user-profile',views.UserProfileAPIView, basename = 'user-profile')
+router = DefaultRouter()
+# router.register(r"all-users", views.GetAllUsers, basename="all-users")
+
+# router.register(r"user-profile", views.UserProfileAPIView, basename="user-profile")
 
 app_name = "users"
 
-urlpatterns = [
-   
-]
+urlpatterns = []

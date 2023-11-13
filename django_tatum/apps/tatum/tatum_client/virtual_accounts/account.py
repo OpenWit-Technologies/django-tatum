@@ -1,7 +1,8 @@
 import json
-from typing import Any, Union
 
+from typing import Any, Union
 from requests import Response
+
 from django_tatum.apps.tatum.tatum_client.exceptions.virtual_account_exceptions import (
     MissingparameterException,
 )
@@ -27,7 +28,7 @@ class TatumVirtualAccounts(BaseRequestHandler):
     def generate_virtual_account_no_xpub(
         self,
         data: CreateAccountDict,
-    ) -> Response:    # sourcery skip: class-extract-method
+    ) -> Response:  # sourcery skip: class-extract-method
         """Generate a virtual account without using an extended public key.
 
         Args:
@@ -52,12 +53,11 @@ class TatumVirtualAccounts(BaseRequestHandler):
         self.setup_request_handler("ledger/account")
         response = self.Handler.post(data)
         return response.json()
-    
+
     def generate_virtual_account_with_xpub(
         self,
         data: CreateAccountXpubDict,
     ) -> Response:
-
         self.setup_request_handler("ledger/account")
         response = self.Handler.post(data)
         return response.json()
@@ -366,6 +366,3 @@ if __name__ == "__main__":
     #         amount="1",
     #     )
     # ) # Not tried this out. TODO: Need to add money from faucets perhaps.
-
-
-    

@@ -11,15 +11,16 @@ from django_tatum.apps.tatum.tatum_client.types.transaction_types import (
 
 # from django_tatum.apps.tatum.utils.utility import validate_required_fields
 
+
 class TatumTransactions(BaseRequestHandler):
     def __init__(self):
         self.setup_request_handler("ledger/transaction")
         super().__init__()
-        
+
     def send_payment(
         self,
         data: SendPaymentDict = None,
-    ):  
+    ):
         """Send a payment transaction.
 
         Args:
@@ -35,14 +36,13 @@ class TatumTransactions(BaseRequestHandler):
         Returns:
             Response: The response object containing transaction information.
         """
-            
-        self.setup_request_handler(f"ledger/transaction")
+
+        self.setup_request_handler("ledger/transaction")
         response = self.Handler.post(data)
         return response.json()
-       
 
     def send_batch_payment(
-        self, 
+        self,
         data: BatchPaymentDict = None,
     ):
         """Send a batch payment transaction.
@@ -55,10 +55,7 @@ class TatumTransactions(BaseRequestHandler):
         Returns:
             Response: The response object containing transaction information.
         """
-        return self.extracted_from_send_payment(
-            "ledger/transaction/batch", data
-        )
-
+        return self.extracted_from_send_payment("ledger/transaction/batch", data)
 
     def find_transaction_for_account(
         self,
@@ -79,10 +76,10 @@ class TatumTransactions(BaseRequestHandler):
         Returns:
             Response: The response object containing transaction information.
         """
-        
+
         try:
-            self.setup_request_handler(f"ledger/transaction/account")
-            
+            self.setup_request_handler("ledger/transaction/account")
+
             # if "id" not in data or data["id"] is None:
             #     raise ValueError("Missing 'id' field in data")
 
@@ -90,7 +87,7 @@ class TatumTransactions(BaseRequestHandler):
 
             if data:
                 query |= data
-                
+
             # if pageSize, offset, count are specified, then append them to query dictionary
             if pageSize:
                 query["pageSize"] = pageSize
@@ -98,11 +95,10 @@ class TatumTransactions(BaseRequestHandler):
                 query["offset"] = offset
             if count:
                 query["count"] = count
-                
+
             response = self.Handler.post(params=query)
             return response.json()
-        
-        
+
         except Exception as e:
             return {
                 "error": "An error occured while trying to send payment",
@@ -119,8 +115,9 @@ class TatumTransactions(BaseRequestHandler):
         """Find transactions across all customer accounts.
 
         Args:
-            data (FindCustomerTransactionDict): Parameters required by Tatum API to find transactions across all customer accounts.
-                The structure of FindCustomerTransactionDict includes various optional parameters.
+            data (FindCustomerTransactionDict): Parameters required by Tatum API to find
+                transactions across all customer accounts.
+            The structure of FindCustomerTransactionDict includes various optional parameters.
             pageSize (int): The number of transactions to retrieve per page.
             offset (int): The offset for paginating through transactions.
             count (bool): If True, include the total count of transactions in the response.
@@ -129,11 +126,11 @@ class TatumTransactions(BaseRequestHandler):
 
         Returns:
             Response: The response object containing transaction information.
-        """        
-        
+        """
+
         try:
-            self.setup_request_handler(f"ledger/transaction/customer")
-            
+            self.setup_request_handler("ledger/transaction/customer")
+
             # if "id" not in data or data["id"] is None:
             #     raise ValueError("Missing 'id' field in data")
 
@@ -141,7 +138,7 @@ class TatumTransactions(BaseRequestHandler):
 
             if data:
                 query |= data
-                
+
             # if pageSize, offset, count are specified, then append them to query dictionary
             if pageSize:
                 query["pageSize"] = pageSize
@@ -149,17 +146,15 @@ class TatumTransactions(BaseRequestHandler):
                 query["offset"] = offset
             if count:
                 query["count"] = count
-                
+
             response = self.Handler.post(params=query)
             return response.json()
-        
+
         except Exception as e:
             return {
                 "error": "An error occured while trying to send payment",
                 "details": str(e),
             }
-        
-        
 
     def find_transaction_within_ledger(
         self,
@@ -181,10 +176,10 @@ class TatumTransactions(BaseRequestHandler):
         Returns:
             Response: The response object containing transaction information.
         """
-        
+
         try:
-            self.setup_request_handler(f"ledger/transaction/ledger")
-            
+            self.setup_request_handler("ledger/transaction/ledger")
+
             # if "id" not in data or data["id"] is None:
             #     raise ValueError("Missing 'id' field in data")
 
@@ -192,7 +187,7 @@ class TatumTransactions(BaseRequestHandler):
 
             if data:
                 query |= data
-                
+
             # if pageSize, offset, count are specified, then append them to query dictionary
             if pageSize:
                 query["pageSize"] = pageSize
@@ -200,24 +195,24 @@ class TatumTransactions(BaseRequestHandler):
                 query["offset"] = offset
             if count:
                 query["count"] = count
-                
+
             response = self.Handler.post(params=query)
             return response.json()
-        
+
         except ValueError as e:
             return {
                 "error": "Validation Error",
                 "details": str(e),
             }
-        
+
         except Exception as e:
             return {
                 "error": "An error occured while trying to send payment",
                 "details": str(e),
             }
-            
+
     def find_transaction_by_reference(
-        self, 
+        self,
         reference_id: str,
     ):
         """Find a transaction by its reference ID.
@@ -228,20 +223,18 @@ class TatumTransactions(BaseRequestHandler):
         Returns:
             Response: The response object containing transaction information.
         """
-        
+
         self.setup_request_handler(f"ledger/transaction/reference/{reference_id}")
-      
+
         response = self.Handler.get()
         return response.json()
-            
 
-    
-    
+
 send_payment_payload = {
     "senderAccountId": "62fd4871427463ab2ba57af5",
     "recipientAccountId": "62f6a23156e369804d2b3490",
     "amount": "0.1",
-    "anonymous": False,  
+    "anonymous": False,
     "compliant": True,
     "transactionCode": "123456789",
     "paymentId": "987654321",
@@ -256,15 +249,15 @@ send_batch_payment_payload = {
         {
             "recipientAccountId": "62f6a23156e369804d2b3490",
             "amount": "0.1",
-            "anonymous": False,  
+            "anonymous": False,
             "compliant": True,
             "transactionCode": "123456789",
             "paymentId": "987654321",
             "recipientNote": "Send",
             "senderNote": None,
-            "baseRate": 1,  
+            "baseRate": 1,
         }
-    ]
+    ],
 }
 
 find_transaction_for_account_payload = {
@@ -275,8 +268,8 @@ find_transaction_for_account_payload = {
     "currency": "Matic",
     "amount": [
         {
-           "op": "lte",
-           "value": "0.1" ,
+            "op": "lte",
+            "value": "0.1",
         }
     ],
     "currencies": "Matic",
@@ -286,7 +279,7 @@ find_transaction_for_account_payload = {
     "paymentId": "987654321",
     "recipientNote": "Send",
     "senderNote": None,
-    "pageSize":  "10",
+    "pageSize": "10",
     "offset": "0",
     "count": True,
 }
@@ -300,8 +293,8 @@ find_transaction_accross_all_customer_accounts_payload = {
     "currency": "Matic",
     "amount": [
         {
-           "op": "lte",
-           "value": "0.1" ,
+            "op": "lte",
+            "value": "0.1",
         }
     ],
     "currencies": "Matic",
@@ -311,7 +304,7 @@ find_transaction_accross_all_customer_accounts_payload = {
     "paymentId": "987654321",
     "recipientNote": "Send",
     "senderNote": None,
-    "pageSize":  "10",
+    "pageSize": "10",
     "offset": "0",
     "count": True,
 }
@@ -324,8 +317,8 @@ find_transaction_within_ledger_payload = {
     "currency": "Matic",
     "amount": [
         {
-           "op": "lte",
-           "value": "0.1" ,
+            "op": "lte",
+            "value": "0.1",
         }
     ],
     "currencies": "Matic",
@@ -335,7 +328,7 @@ find_transaction_within_ledger_payload = {
     "paymentId": "987654321",
     "recipientNote": "Send",
     "senderNote": None,
-    "pageSize":  "10",
+    "pageSize": "10",
     "offset": "0",
 }
 
@@ -347,5 +340,4 @@ if __name__ == "__main__":
     # print(tat.find_transaction_for_account(data=find_transaction_for_account_payload))
     # print(tat.find_transaction_accross_all_customer_accounts(data=find_transaction_accross_all_customer_accounts_payload))
     # print(tat.find_transaction_within_ledger(data=find_transaction_within_ledger_payload))
-    # print(tat.find_transaction_by_reference(reference_id="2a0786b8-52ef-44c1-a582-4f7e3c748c08"))  
-    
+    # print(tat.find_transaction_by_reference(reference_id="2a0786b8-52ef-44c1-a582-4f7e3c748c08"))
