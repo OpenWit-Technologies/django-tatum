@@ -6,7 +6,6 @@ from requests import Response
 
 from django_tatum.apps.tatum.tatum_client.exceptions.virtual_account_exceptions import MissingparameterException
 from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import AccountQueryDict
-from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import CreateAccountXpubDict
 from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import BatchAccountDict
 from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import CreateAccountDict
 from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import UpdateAccountDict
@@ -43,7 +42,7 @@ class TatumVirtualAccounts(BaseRequestHandler):
     def generate_virtual_account_no_xpub(
         self,
         data: CreateAccountDict,
-    ) -> Response:  # sourcery skip: class-extract-method
+    ) -> Response:
         """Generate a virtual account without using an extended public key.
 
         Args:
@@ -87,14 +86,6 @@ class TatumVirtualAccounts(BaseRequestHandler):
         """
         if len(data["accountCode"]) > 50:
             raise ValueError("Account code cannot be greater than 50 characters.")
-        self.setup_request_handler("ledger/account")
-        response = self.Handler.post(data)
-        return response.json()
-
-    def generate_virtual_account_with_xpub(
-        self,
-        data: CreateAccountXpubDict,
-    ) -> Response:
         self.setup_request_handler("ledger/account")
         response = self.Handler.post(data)
         return response.json()
@@ -629,22 +620,7 @@ creatr_bulk_account_payload = {
 }
 
 create_account_payload = {
-    "currency": "ETH",
-    "customer": {
-        "externalId": "123456789",
-        "accountingCurrency": "USD",
-        "customerCountry": "US",
-        "providerCountry": "US",
-    },
-    "compliant": True,
-    "accountCode": "123456789",
-    "accountingCurrency": "USD",
-    "accountNumber": "123456789",
-}
-
-create_account_with_xpub_payload = {
-    "currency": "ETH",
-    "xpub": "xpub6FJnrHDNdwdeHxT7eNC3c2oLiCBFg6hezyrzCNrqVXGDHDqsUBbeRdGaFyJxUbqusqAFX6K2ihXJwyCQn1MX3Vrdh1ekUizUkK7PXBEuoCU",
+    "currency": "BTC",
     "customer": {
         "externalId": "123456789",
         "accountingCurrency": "USD",
@@ -668,12 +644,10 @@ list_all_account_payload = {"active": True}
 if __name__ == "__main__":
     tva = TatumVirtualAccounts()
     # print(tva.generate_virtual_account_no_xpub(data=create_account_payload))
-    # print(tva.generate_virtual_account_with_xpub(data=create_account_with_xpub_payload))
     # print(tva.list_all_virtual_accounts(list_all_account_payload))
     # print(tva.get_account_entities_count())
-    # print(tva.get_account_balance(account_id="6533086644a445035296fe18"))
-    # print(tva.create_batch_accounts(accounts=creatr_bulk_account_payload["accounts"]))
-    # print(tva.list_all_customer_accounts(account_id="653307d18c610c9e0ef45940"))
+    # print(tva.get_account_balance(account_id="653307d18c610c9e0ef4593f"))
+    # print(tva.create_batch_accounts(accounts=create_bulk_account_payload["accounts"]))
 
     # print(
     #     tva.update_virtual_account(

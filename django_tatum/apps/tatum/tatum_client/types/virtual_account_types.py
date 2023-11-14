@@ -29,16 +29,6 @@ class CreateAccountDict(TypedDict, total=False):
     accountNumber: str
 
 
-class CreateAccountXpubDict(TypedDict, total=False):
-    currency: str
-    customer: CustomerRegistrationDict
-    compliant: bool
-    accountCode: str
-    accountingCurrency: str
-    accountNumber: str
-    xpub: str
-
-
 class BatchAccountDict(CreateAccountDict):
     pass
 
