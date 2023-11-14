@@ -1,11 +1,4 @@
-<<<<<<< Updated upstream
-from tatum_client import creds
-from utils.requestHandler import RequestHandler
-=======
-# from django_tatum.apps.tatum.tatum_client import creds 
-# from django_tatum.apps.tatum.utils.requestHandler import RequestHandler
 from requests import Response
->>>>>>> Stashed changes
 
 from django_tatum.apps.tatum.tatum_client.virtual_accounts.base import (
     BaseRequestHandler,
@@ -76,11 +69,11 @@ class TatumCustomer(BaseRequestHandler):
   
     
     def deactivate_customer(self, id: str):
-        return self._customer_id_parser(id, '/deactivate', ' deactivated successfully')
+        return self._customer_id_parser(id, "/deactivate", " deactivated successfully")
 
     def enable_customer(self, id: str):
-        return self._customer_id_parser(id, '/enable', ' enabled successfully.')
-    
+        return self._customer_id_parser(id, "/enable", " enabled successfully.")
+
     def disable_customer(self, id: str):
         return self._customer_id_parser(id, '/disable', ' disabled successfully.')
     
