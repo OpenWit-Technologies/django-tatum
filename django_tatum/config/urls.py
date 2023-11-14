@@ -15,10 +15,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+
 # minor
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('debug_toolbar', include('debug_toolbar.urls')),
-    path('api-auth/', include('rest_framework.urls')),
+    path("admin/", admin.site.urls),
+    path("debug_toolbar", include("debug_toolbar.urls")),
+    path("api-auth/", include("rest_framework.urls")),
     # path("graphql", GraphQLView.as_view(graphiql=True, schema=schema)),
 ]

@@ -19,3 +19,8 @@ class BaseRequestHandler:
         )
 
         return self.Handler
+
+    def extracted_from_send_payment(self, arg0, data):
+        self.setup_request_handler(arg0)
+        response = self.Handler.post(data)
+        return response.json()

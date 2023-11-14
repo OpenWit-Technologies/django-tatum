@@ -11,7 +11,7 @@ b. [Dependency Management with Python Poetry](https://realpython.com/dependency-
 
 Here is the poetry doc for installing dependencies to the project:
 ["https://python-poetry.org/docs/basic-usage/#installing-dependencies"]{target="_blank"}
- 
+
 2. Preferably, use this command to create a virtual in the same directory as the current directory:
 
 > poetry config virtualenvs.in-project true

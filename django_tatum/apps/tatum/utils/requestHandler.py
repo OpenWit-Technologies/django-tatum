@@ -14,14 +14,8 @@ class RequestHandler:
             **kwargs,
         )
 
-    def post(self, data, *args, **kwargs):
-        return requests.post(
-            self.url,
-            headers=self.headers,
-            json=data,
-            *args,
-            **kwargs,
-        )
+    def post(self, data=None, *args, **kwargs):
+        return requests.post(self.url, headers=self.headers, json=data, *args, **kwargs)
 
     def put(self, data=None, *args, **kwargs):
         return requests.put(

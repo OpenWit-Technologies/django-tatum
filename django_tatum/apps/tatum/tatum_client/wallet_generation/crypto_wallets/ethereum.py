@@ -2,9 +2,10 @@ from django_tatum.apps.tatum.tatum_client import creds
 from django_tatum.apps.tatum.utils.requestHandler import RequestHandler
 
 
-class TatumBlockchainAdress:
+class EthereumWallet:
     def __init__(self):
-        self.requestUrl = f"{creds.TATUM_BASE_URL}offchain/account"
+        self.requestUrl = f"{creds.TATUM_BASE_URL}ethereum/wallet"
+
         self.Handler = RequestHandler(
             self.requestUrl,
             {
@@ -13,19 +14,22 @@ class TatumBlockchainAdress:
             },
         )
 
-    def create_deposit_address(self, id: str):
-        self.requestUrl = f"{self.requestUrl}/{id}/address"
+    def generate_ethereum_wallet(self):
+        self.requestUrl = f"{creds.TATUM_BASE_URL}ethereum/wallet"
+
         self.Handler = RequestHandler(
             self.requestUrl,
-            {"x-api-key": creds.TATUM_API_KEY},
+            {
+                "Content-Type": "application/json",
+                "x-api-key": creds.TATUM_API_KEY,
+            },
         )
 
-        response = self.Handler.post()
+        response = self.Handler.get()
         return response.json()
 
 
 if __name__ == "__main__":
-    tatum_blockchain_address = TatumBlockchainAdress()
-    id = "62f6a23156e369804d2b3490"
-    tba = tatum_blockchain_address.create_deposit_address(id)
-    print(tba)
+    ethereum = EthereumWallet()
+    eth_wallet = ethereum.generate_ethereum_wallet()
+    print(eth_wallet)

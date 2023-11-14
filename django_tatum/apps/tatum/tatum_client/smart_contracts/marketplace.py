@@ -1,6 +1,5 @@
 from django_tatum.apps.tatum.tatum_client import creds
 from django_tatum.apps.tatum.utils.requestHandler import RequestHandler
-import django_tatum.apps.tatum.utils.utility as utils
 
 
 class Marketplace:
@@ -23,5 +22,4 @@ class Marketplace:
         nonce: int = None,
         fee: dict = None,
     ):
-
         pass
