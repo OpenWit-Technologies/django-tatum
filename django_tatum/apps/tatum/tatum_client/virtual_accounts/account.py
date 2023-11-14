@@ -1,17 +1,21 @@
 import json
+from typing import Any, Union
 
-from typing import Any
-from typing import Union
 from requests import Response
 
-from django_tatum.apps.tatum.tatum_client.exceptions.virtual_account_exceptions import MissingparameterException
-from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import AccountQueryDict
-from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import CreateAccountXpubDict
-from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import BatchAccountDict
-from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import CreateAccountDict
-from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import UpdateAccountDict
-from django_tatum.apps.tatum.tatum_client.virtual_accounts.base import BaseRequestHandler
-
+from django_tatum.apps.tatum.tatum_client.exceptions.virtual_account_exceptions import (
+    MissingparameterException,
+)
+from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import (
+    AccountQueryDict,
+    BatchAccountDict,
+    CreateAccountDict,
+    CreateAccountXpubDict,
+    UpdateAccountDict,
+)
+from django_tatum.apps.tatum.tatum_client.virtual_accounts.base import (
+    BaseRequestHandler,
+)
 
 # TODO: Modify all methods to handle all respnse types
 # TODO: Refactor "account/ledger" url prefix to avoid repetition.
@@ -628,6 +632,8 @@ creatr_bulk_account_payload = {
     ]
 }
 
+test_xpub: str = "xpub6FJnrHDNdwdeHxT7eNC3c2oLiCBFg6hezyrzCNrqVXGDHDqsUBbeRdGaFyJxUbqusqAFX6K2ihXJwyCQn1MX3Vrdh1ekUizUkK7PXBEuoCU"
+
 create_account_payload = {
     "currency": "ETH",
     "customer": {
@@ -644,7 +650,7 @@ create_account_payload = {
 
 create_account_with_xpub_payload = {
     "currency": "ETH",
-    "xpub": "xpub6FJnrHDNdwdeHxT7eNC3c2oLiCBFg6hezyrzCNrqVXGDHDqsUBbeRdGaFyJxUbqusqAFX6K2ihXJwyCQn1MX3Vrdh1ekUizUkK7PXBEuoCU",
+    "xpub": test_xpub,
     "customer": {
         "externalId": "123456789",
         "accountingCurrency": "USD",
