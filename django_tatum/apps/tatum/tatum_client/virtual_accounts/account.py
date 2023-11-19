@@ -1,24 +1,22 @@
+"""Virtual Account handler"""
 import json
-from typing import Any, Union
 
 from requests import Response
+from typing import Any
+from typing import Union
+
 
 from django_tatum.apps.tatum.tatum_client.exceptions.virtual_account_exceptions import (
     MissingparameterException,
 )
-from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import (
-    AccountQueryDict,
-    BatchAccountDict,
-    CreateAccountDict,
-    CreateAccountXpubDict,
-    UpdateAccountDict,
-)
-from django_tatum.apps.tatum.tatum_client.virtual_accounts.base import (
-    BaseRequestHandler,
-)
+from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import AccountQueryDict
+from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import BatchAccountDict
+from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import CreateAccountDict
+from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import CreateAccountXpubDict
+from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import UpdateAccountDict
 
-# TODO: Modify all methods to handle all respnse types
-# TODO: Refactor "account/ledger" url prefix to avoid repetition.
+from django_tatum.apps.tatum.tatum_client.virtual_accounts.base import BaseRequestHandler
+
 # TODO: Error handling
 
 
@@ -99,6 +97,46 @@ class TatumVirtualAccounts(BaseRequestHandler):
         self,
         data: CreateAccountXpubDict,
     ) -> Response:
+        """Create a virtual account by using an extended public key.
+
+        Args:
+            data (CreateAccountXpubDict): Params required by
+            Tatum API to create a virtual account usin an extended public key.
+            Some are optional, and are marked as such below.
+
+            CreateAccountXpubDict is a typed dict with the following params:
+                currency (str): The currency for the virtual account.
+                See [https://apidoc.tatum.io/tag/Account#operation/createAccount] for the list of supported assets.
+                - compliant (bool): Enable compliant checks.
+                    If this is enabled, it is impossible to create account if compliant check fails.
+                - accountCode (str)
+                - accountingCurrency (str)
+                - accountNumber (str)
+                - xpub (str): The extended public key.
+                - customer (optional CustomerRegistrationDict):
+                A typed dictionary with the following args:
+                    -- externalId: (required str):
+                        The external ID of the customer;
+                        use only anonymized identification that you have in your system
+                        If a customer with the specified external ID does not exist, a new customer is created.
+                        If a customer with the specified external ID exists, it is updated with the provided information.
+                    -- accountingCurrency: (optional str (FiatCurrency)):
+                        Default: "EUR".
+                        This is the ISO 4217 code of the currency in which all
+                        transactions for all virtual accounts of the customer will be billed;
+                        to overwrite the currency for this specific virtual account,
+                        set the accountingCurrency parameter at the account level.
+                        See [https://apidoc.tatum.io/tag/Account#operation/createAccount] for the list of supported currencies.
+                    -- customerCountry: (optional str):
+                        The ISO 3166-1 code of the country that the customer has to be compliant with.
+                        Max is set to 2 characters.
+                    -- providerCountry: (optional str):
+                        The ISO 3166-1 code of the country that the service provider has to be compliant with.
+                        Max is set to 2 characters.
+
+        Returns:
+            Response: _description_
+        """
         self.setup_request_handler("ledger/account")
         response = self.Handler.post(data)
         return response.json()
@@ -107,6 +145,29 @@ class TatumVirtualAccounts(BaseRequestHandler):
         self,
         query: AccountQueryDict = None,
     ) -> Response:
+        """Lists all accounts. Inactive accounts are also visible.
+
+        Args:
+            query (AccountQueryDict, optional): A typed dict tith the following parameters:
+            - page_size: (optional int): Max number of items per page is 50.
+            - page: (optional int): Page Number.
+            - sort: (optional str): Direction of sorting. Can be 'asc' or 'desc'.
+            - sort_by: (optional str): Sort by Enums: "id", "account_number", "account_balance", or "available_balance".
+            - active: (optional bool): Filter only active or non active accounts
+            - only_non_zero_balance: (optional bool): Filter only accounts with non zero balances
+            - frozen: (optional bool): Filter only frozen or non frozen accounts.
+            - currency: (optional str): Filter by currency.
+            - account_number: (optional str): Filter by account number
+
+            Defaults to None.
+
+        Raises:
+            ValueError: Raised when an invalid query parameter is provided.
+
+        Returns:
+            200 Response: An array of a JSON object.
+
+        """
         self.setup_request_handler("ledger/account")
         if query is None:
             query = {}
@@ -157,8 +218,22 @@ class TatumVirtualAccounts(BaseRequestHandler):
         return json.dumps(response.json())
 
     def get_account_balance(self, account_id: str):
-        if account_id is None:
-            return f"MissingParameterErrror. {account_id} must be specified."
+        """
+        This method is used to get the balance of a specific account.
+
+        It sends a GET request to the '/ledger/account/{account_id}/balance' endpoint of the Tatum API.
+
+        Args:
+            account_id (str): The ID of the account.
+
+        Returns:
+            dict: A dictionary containing the balance of the account.
+
+        Raises:
+            ValueError: If the account_id is not provided.
+        """
+        if not account_id:
+            raise ValueError("MissingParameterError. account_id must be specified.")
 
         self.setup_request_handler(f"ledger/account/{account_id}/balance")
         response = self.Handler.get()
@@ -168,7 +243,21 @@ class TatumVirtualAccounts(BaseRequestHandler):
         self,
         account_id: str,
     ) -> dict[str, str]:
-        if account_id is None:
+        """
+        This method is used to get the details of a specific account.
+
+        It sends a GET request to the '/ledger/account/{account_id}' endpoint of the Tatum API.
+
+        Args:
+            account_id (str): The ID of the account.
+
+        Returns:
+            dict: A dictionary containing the details of the account.
+
+        Raises:
+            ValueError: If the account_id is not provided.
+        """
+        if not account_id:
             raise MissingparameterException([account_id], "Missing parameter.")
 
         self.setup_request_handler(f"ledger/account/{account_id}")
@@ -179,6 +268,20 @@ class TatumVirtualAccounts(BaseRequestHandler):
         self,
         accounts: list[BatchAccountDict],
     ):
+        """
+        This method is used to create multiple accounts at once.
+
+        It sends a POST request to the '/ledger/account/batch' endpoint of the Tatum API.
+
+        Args:
+            account_data (list): A list of dictionaries, each containing the data for a new account.
+
+        Returns:
+            list: A list of dictionaries, each containing the details of a newly created account.
+
+        Raises:
+            ValueError: If the account_data is not provided or is not a list.
+        """
         self.setup_request_handler("ledger/account/batch")
         payload: dict[str, Any] = {
             "accounts": accounts,
@@ -196,8 +299,10 @@ class TatumVirtualAccounts(BaseRequestHandler):
         page_size: int = 10,
         offset: int = 0,
     ):
-        """Lists all accounts associated with a customer.
+        """This method is used to list all accounts associated with a specific customer.
         Only active accounts are visible.
+
+        It sends a GET request to the '/ledger/customer/{customer_id}/accounts' endpoint of the Tatum API.
 
         Args:
             customer_id (str): The internal customer ID supplied when creating a virtual account.
@@ -206,7 +311,10 @@ class TatumVirtualAccounts(BaseRequestHandler):
             offset (int, optional): _description_. Defaults to 0.
 
         Returns:
-            _type_: _description_
+            list: A list of dictionaries, each representing an account associated with the customer.
+
+        Raises:
+            ValueError: If the customer_id is not provided.
         """
         self.setup_request_handler(f"ledger/account/customer/{customer_id}")
         self.Handler.headers.pop("Content-Type")
@@ -229,16 +337,20 @@ class TatumVirtualAccounts(BaseRequestHandler):
         account_code: str = None,
         account_number: str = None,
     ):
-        """Update the account code or account number from an external system.
+        """This method is used to update the account code or account number of a specific virtual account from an external system.
+
+        It sends a PUT request to the '/v3/virtualaccount/{account_id}' endpoint of the Tatum API.
 
         Args:
             account_id (str): The Account ID of the virtual account to be updated. The account ID cannot be updated.
-            account_code Optional(str): The new account code to be associated
-                with the account ID.
+            account_code Optional(str): The new account code to be associated with the account ID.
             account_number Optional(str): The new account
 
         Returns:
-            _type_: _description_
+            dict: A dictionary containing the updated details of the virtual account.
+
+        Raises:
+            ValueError: If the account_id or account_data is not provided.
         """
         self.setup_request_handler(f"ledger/account/{account_id}")
         payload: UpdateAccountDict = {
@@ -260,7 +372,10 @@ class TatumVirtualAccounts(BaseRequestHandler):
         type: list[int],
         description: str = None,
     ):
-        """Blocks an amount in an account.
+        """This method is used to block a specific amount in a virtual account.
+
+        It sends a POST request to the '/v3/virtualaccount/{account_id}/block' endpoint of the Tatum API.
+
         Any number of distinct amounts can be blocked in one account.
         Every new blockage has its own distinct ID,
         which is used as a reference.
@@ -288,7 +403,10 @@ class TatumVirtualAccounts(BaseRequestHandler):
                 being applied. Defaults to None.
 
         Returns:
-            _type_: _description_
+            dict: A dictionary containing the id of the block operation. This is the Blocakge ID.
+
+        Raises:
+            ValueError: If the account_id or amount is not provided.
         """
         self.setup_request_handler(f"ledger/account/block/{id}")
         payload: dict[str, Union[str, list]] = {
@@ -358,6 +476,9 @@ class TatumVirtualAccounts(BaseRequestHandler):
                 }
                 The reference is a unique identifier of the transaction within the virtual account);\
                     if the transaction fails, you can use this reference to search through the Tatum logs.
+
+        Raises:
+            ValueError: If the account_id, amount, or transaction_data is not provided.
         """
         self.setup_request_handler(f"ledger/account/block/{blockage_id}")
         # Only add the optional parameters to the payload if they are supplied
@@ -438,11 +559,6 @@ class TatumVirtualAccounts(BaseRequestHandler):
             offset (int, optional): Offset to obtain the next page of data.
             Defaults to None, which Tatum interpretes as offset=0.
 
-        Raises:
-            ValueError: If a value greater than 50 is passed for page-size,
-            a value error is returned to save the user the round trip to Tatum,
-            who will eventually return a 400 response :).
-
         Returns:
             list[dict[str, str]]: An array of blockage ids & blockage details.
                 200 Response Sample:
@@ -465,6 +581,11 @@ class TatumVirtualAccounts(BaseRequestHandler):
                             This can be a code or an identifier from an external
                             system or a short description of the blockage.
                 description (str): The description provided during the blocakge.
+
+        Raises:
+            ValueError: If a value greater than 50 is passed for page-size,
+            a value error is returned to save the user the round trip to Tatum,
+            who will eventually return a 400 response :).
         """
         if page_size > 50:
             raise ValueError("Page size cannot be greater than 50.")
@@ -488,6 +609,8 @@ class TatumVirtualAccounts(BaseRequestHandler):
     ) -> dict["str, str"]:
         """Gets blocked amount by id.
 
+        It sends a GET request to the '/v3/virtualaccount/{account_id}/blocked' endpoint of the Tatum API.
+
         Returns:
             dict[str, str]: The response object from Tatum.
                 200 Response Sample:
@@ -506,6 +629,9 @@ class TatumVirtualAccounts(BaseRequestHandler):
                 amount (str): The amount blocked on the account
                 type (str): The ID of the blockage
                 description (str): The ID of the blockage
+
+        Raises:
+            ValueError: If the blockage_id is not provided.
         """
         self.setup_request_handler(f"ledger/account/block/{blockage_id}/detail")
         response: Response = self.Handler.get()
@@ -515,7 +641,9 @@ class TatumVirtualAccounts(BaseRequestHandler):
         self,
         account_id: str,
     ) -> dict[str, Union[str, int]]:
-        """Activates an account.
+        """This method is used to activate a specific virtual account.
+
+        It sends a PUT request to the '/v3/virtualaccount/{account_id}/activate' endpoint of the Tatum API.
 
         Args:
             account_id (str): The account ID to be activated.
@@ -528,7 +656,7 @@ class TatumVirtualAccounts(BaseRequestHandler):
         if response.status_code == 204:
             response_object: dict[str, str] = {
                 "message": "Account activated successfully.",
-                "status_code": 200,
+                "status_code": 204,
             }
             return response_object
         return response.json()
@@ -537,17 +665,24 @@ class TatumVirtualAccounts(BaseRequestHandler):
         self,
         account_id: str,
     ) -> dict[str, Union[str, int]]:
-        """Deactivates an account. Only accounts with account and available balances of zero can be deactivated.\
-            Accounts with negative balances cannot be deactivated. \
-            Deactivated accounts are not visible in the list of accounts, it is not possible to send funds to \
-            these accounts or perform transactions. \
-            However, they are still present in the ledger as well as all their transaction histories.
+        """This method is used to deactivate a specific virtual account.
+
+        It sends a PUT request to the '/v3/virtualaccount/{account_id}/deactivate' endpoint of the Tatum API.
+
+        Only accounts with account and available balances of zero can be deactivated.\
+        Accounts with negative balances cannot be deactivated. \
+        Deactivated accounts are not visible in the list of accounts, it is not possible to send funds to \
+        these accounts or perform transactions. \
+        However, they are still present in the ledger as well as all their transaction histories.
 
         Args:
             account_id (str): The account ID to be deactivated.
 
         Returns:
-            dict[str, str]: _description_
+            dict[str, any]: A dictionary containing the details of the deactivation operation.
+
+        Raises:
+            ValueError: If the account_id is not provided.
         """
         self.setup_request_handler(f"ledger/account/{account_id}/deactivate")
         response: Response = self.Handler.put()
@@ -557,24 +692,32 @@ class TatumVirtualAccounts(BaseRequestHandler):
                 "status_code": 204,
             }
             return response_object
-        print(response.json())
         return response.json()
 
     def freeze_account(
         self,
         account_id: str,
     ) -> dict[str, Union[str, int]]:
-        """Disables all outgoing transactions. \
+        """
+        This method is used to freeze a specific virtual account.
+
+        It sends a PUT request to the '/v3/virtualaccount/{account_id}/freeze' endpoint of the Tatum API.
+
+        It disables all outgoing transactions.
         Incoming transactions to the account are available.
-        When an account is frozen, its available balance is set to 0. Not that a frozen account is still ACTIVE.
-        This operation will create a new blockage of type ACCOUNT_FROZEN, which is automatically \
+        When an account is frozen, it's available balance is set to 0. Note that a frozen account is still ACTIVE.
+
+        This operation will create a new blockage of type ACCOUNT_FROZEN, which is automatically
         deleted when the account is unfrozen.
 
         Args:
             account_id (str): The account ID to be frozen.
 
         Returns:
-            dict[str, str]: _description_
+            dict[str, any]: A dictionary containing the details of the freeze operation.
+
+        Raises:
+            ValueError: If the account_id is not provided.
         """
         self.setup_request_handler(f"ledger/account/{account_id}/freeze")
         response: Response = self.Handler.put()
@@ -590,9 +733,11 @@ class TatumVirtualAccounts(BaseRequestHandler):
         self,
         account_id: str,
     ) -> dict[str, Union[str, int]]:
-        """Unfreezes a previously frozen account. \
-        This operation will delete the ACCOUNT_FROZEN blockage, \
-            which was created when the account was frozen.
+        """This method is used to unfreeze a specific virtual account.
+
+        It sends a PUT request to the '/v3/virtualaccount/{account_id}/unfreeze' endpoint of the Tatum API.
+
+        This operation will delete the ACCOUNT_FROZEN blockage, which was created when the account was frozen.
 
         Unfreezing a non-frozen account will not affect the account.
 
@@ -600,7 +745,10 @@ class TatumVirtualAccounts(BaseRequestHandler):
             account_id (str): The account ID to be unfrozen.
 
         Returns:
-            dict[str, str]: _description_
+            dict[str, str]: A dictionary containing the details of the unfreeze operation.
+
+        Raises:
+            ValueError: If the account_id is not provided.
         """
         self.setup_request_handler(f"ledger/account/{account_id}/unfreeze")
         response: Response = self.Handler.put()
