@@ -701,7 +701,7 @@ if __name__ == "__main__":
     #     )
     # )  # Not tried this out. TODO: Need to add money from faucets perhaps.
     # print(tva.get_blocked_amounts_for_an_account(account_id="653307d18c610c9e0ef4593f"))
-    # print(tva.unblock_amount_in_an_account(blockage_id="65386475d8b1ad42ce2af684"))
+    print(tva.unblock_amount_in_an_account(blockage_id="653efae9f06e25d86dc974d0"))
     # print(tva.get_blocked_amount_by_id(blockage_id="653efae9f06e25d86dc974d0"))
     # print(tva.deactivate_account(account_id="6533086644a445035296fe18"))
     # print(tva.activate_account(account_id="6533086644a445035296fe18"))

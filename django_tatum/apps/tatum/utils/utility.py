@@ -1,3 +1,7 @@
+import json
+
+from typing import Any
+
 from django_tatum.apps.tatum.tatum_client import creds
 from django_tatum.apps.tatum.utils.requestHandler import RequestHandler
 
@@ -23,3 +27,16 @@ class AccountApi:
                 "x-api-key": creds.TATUM_API_KEY,
             },
         )
+
+def write_json_to_file(
+    filename: str,
+    response: Any,
+):
+    """Write the dumped response to a json file.
+
+    Args:
+        filename (str): name of the output file.
+        response (Any): The response.json object from the response to a request.
+    """
+    with open(filename, "w") as f:
+        json.dump(response, f, indent=4)
