@@ -14,18 +14,32 @@ Handler = RequestHandler(
 )
 
 
-# TODO: Create a class with functions for generating all the crypto wallets
-def generate_solana_wallet():
-    """
-    Generates a new Solana wallet.
-    """
-    print(f"TATUM_API_KEY: {creds.TATUM_API_KEY}")
-    # create a new wallet
-    response = Handler.get()
-    # return the wallet address and private key #TODO: return ONLY the wallet address; encrypt the private key in Tatum Key Manager System
-    return response.json()
+class SolanaWallet:
+
+    def __init__(self):
+        self.requestUrl = f"{creds.TATUM_BASE_URL}solana/wallet"
+
+        self.Handler = RequestHandler(
+            self.requestUrl,
+            {
+                "Content-Type": "application/json",
+                "x-api-key": creds.TATUM_API_KEY,
+            },
+        )
+
+    def generate_solana_wallet():
+        """
+        Generates a new Solana wallet.
+        """
+        print(f"TATUM_API_KEY: {creds.TATUM_API_KEY}")
+        # create a new wallet
+        response = Handler.get()
+        # return the wallet address and private key
+        # #TODO: return ONLY the wallet address; encrypt the private key in Tatum Key Manager System
+        return response.json()
 
 
 if __name__ == "__main__":
-    sol_wallet = generate_solana_wallet()
+    solana = SolanaWallet()
+    sol_wallet = solana.generate_solana_wallet()
     print(sol_wallet)
