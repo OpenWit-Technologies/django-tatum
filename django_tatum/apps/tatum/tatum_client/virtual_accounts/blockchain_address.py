@@ -13,8 +13,8 @@ class TatumBlockchainAdress:
             },
         )
 
-    def create_deposit_address(self, id: str):
-        self.requestUrl = f"{self.requestUrl}/{id}/address"
+    def create_deposit_address(self, account_id: str):
+        self.requestUrl = f"{self.requestUrl}/{account_id}/address"
         self.Handler = RequestHandler(
             self.requestUrl,
             {"x-api-key": creds.TATUM_API_KEY},
@@ -26,6 +26,6 @@ class TatumBlockchainAdress:
 
 if __name__ == "__main__":
     tatum_blockchain_address = TatumBlockchainAdress()
-    id = "62f6a23156e369804d2b3490"
-    tba = tatum_blockchain_address.create_deposit_address(id)
+    account_id = "656cbfa574d8e8cd7f1db8ad"
+    tba = tatum_blockchain_address.create_deposit_address(account_id)
     print(tba)

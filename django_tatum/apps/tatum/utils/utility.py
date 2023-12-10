@@ -1,3 +1,4 @@
+"""Utilities used in django tatum."""
 import json
 
 from typing import Any
@@ -28,6 +29,7 @@ class AccountApi:
             },
         )
 
+
 def write_json_to_file(
     filename: str,
     response: Any,
@@ -39,4 +41,7 @@ def write_json_to_file(
         response (Any): The response.json object from the response to a request.
     """
     with open(filename, "w") as f:
-        json.dump(response, f, indent=4)
+        if isinstance(response, str):
+            f.write(response)
+        else:
+            f.write(json.dumps(response, indent=4))
