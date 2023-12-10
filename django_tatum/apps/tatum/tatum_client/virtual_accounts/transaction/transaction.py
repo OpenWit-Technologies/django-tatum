@@ -2,19 +2,14 @@
 These transactions are performed between 2 accounts with the same currency.
 To perform an exchange operation between accounts with different currencies,
 use the 'Order Book' API calls."""
-from django_tatum.apps.tatum.tatum_client.virtual_accounts.base import (
-    BaseRequestHandler,
-)
-from django_tatum.apps.tatum.tatum_client.types.transaction_types import (
-    SendPaymentDict,
-    BatchPaymentDict,
-    FindTransactionDict,
-    FindCustomerTransactionDict,
-    FindLedgerTransactionDict,
-)
-from django_tatum.apps.tatum.utils.response_handlers import handle_response_object
 
-# from django_tatum.apps.tatum.utils.utility import validate_required_fields
+from django_tatum.apps.tatum.tatum_client.types.transaction_types import BatchPaymentDict
+from django_tatum.apps.tatum.tatum_client.types.transaction_types import FindCustomerTransactionDict
+from django_tatum.apps.tatum.tatum_client.types.transaction_types import FindLedgerTransactionDict
+from django_tatum.apps.tatum.tatum_client.types.transaction_types import FindTransactionDict
+from django_tatum.apps.tatum.tatum_client.types.transaction_types import SendPaymentDict
+from django_tatum.apps.tatum.tatum_client.virtual_accounts.base import BaseRequestHandler
+from django_tatum.apps.tatum.utils.response_handlers import handle_response_object
 
 
 class TatumTransactions(BaseRequestHandler):
