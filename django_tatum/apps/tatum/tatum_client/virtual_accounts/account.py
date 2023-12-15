@@ -110,7 +110,6 @@ class TatumVirtualAccounts(BaseRequestHandler):
         account_number: str = None,
         account_code: str = None,
     ) -> Response:
-        self.setup_request_handler("ledger/account")
         customer_info: CustomerRegistrationDict = {}
 
         customer_info["accountingCurrency"] = accounting_currency_single_account
@@ -726,8 +725,8 @@ class TatumVirtualAccounts(BaseRequestHandler):
 
         try:
             selected_wallet_type = WalletType[currency]
-        except KeyError:
-            raise ValueError(f"Invalid wallet currency type: {currency}")
+        except KeyError as error:
+            raise ValueError(f"Invalid wallet currency type: {currency}") from error
 
         # Access the corresponding wallet class and create an instance
         selected_wallet_class = WALLET_CLASSES[selected_wallet_type]()
