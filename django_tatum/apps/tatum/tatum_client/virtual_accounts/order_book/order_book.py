@@ -11,7 +11,7 @@ from django_tatum.apps.tatum.utils.response_handlers import handle_response_obje
 class OrderBook(BaseRequestHandler):
     def __init__(self):
         """Initialize TatumVirtualCurrency class."""
-        self.setup_request_handler("ledger/virtualCurrency")
+        self.setup_request_handler("trade")
         super().__init__()
 
     def create_instant_trade(
