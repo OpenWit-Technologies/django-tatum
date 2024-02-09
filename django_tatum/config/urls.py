@@ -15,10 +15,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django_tatum.admin import admin_site
 
-# minor
+admin.autodiscover()
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("tatum/cryptoadmin/", admin_site.urls),
+    path("admin_tools/", include("admin_tools.urls")),
     path("debug_toolbar", include("debug_toolbar.urls")),
     path("api-auth/", include("rest_framework.urls")),
     # path("graphql", GraphQLView.as_view(graphiql=True, schema=schema)),

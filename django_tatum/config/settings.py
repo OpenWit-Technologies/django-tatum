@@ -13,7 +13,7 @@ def location(x):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", x)
 
 
-# Todo: Obsere functionality of the location method to ensure lack of functionality regression.
+# Todo: Observe functionality of the location method to ensure lack of functionality regression.
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -33,6 +33,12 @@ ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1"]
 # Application definition
 # ------------------------------------------------------------------------------
 INSTALLED_APPS = [
+    "admin_tools",
+    "admin_tools.theming",
+    "admin_tools.menu",
+    "admin_tools.dashboard",
+    "admin_interface",
+    "colorfield",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -52,6 +58,9 @@ INSTALLED_APPS = [
     "apps.users",
     "apps.tatum",
 ]
+
+X_FRAME_OPTIONS = "SAMEORIGIN"
+SILENCED_SYSTEM_CHECKS = ["security.W019"]
 
 SITE_ID = 1
 
@@ -78,6 +87,9 @@ ROOT_URLCONF = "config.urls"
 # Templates
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#templates
+# Windows users: due to filename restrictions on windows platforms,
+# you have to put the 'admin_tools.template_loaders.Loader' at the very begining of the list in
+# your TEMPLATES or TEMPLATE_LOADERS settings variable.
 
 TEMPLATES = [
     {
@@ -85,13 +97,17 @@ TEMPLATES = [
         "DIRS": [
             location("templates"),
         ],
-        "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+            ],
+            "loaders": [
+                "django.template.loaders.filesystem.Loader",
+                "django.template.loaders.app_directories.Loader",
+                "admin_tools.template_loaders.Loader",
             ],
         },
     },
@@ -183,7 +199,11 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = [str(BASE_DIR.joinpath("static"))]
 # http://whitenoise.evans.io/en/stable/django.html#add-compression-and-caching-support
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
+# List of finder classes that know how to discover static files from various sources.
+STATICFILES_FINDERS = [
+    # 'django.contrib.staticfiles.finders.FileSystemFinder',
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+]
 
 # DJANGO-CRISPY-FORMS CONFIGS
 # ------------------------------------------------------------------------------
@@ -214,3 +234,20 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ACCOUNT_AUTHENTICATION_METHOD = 'email'
 # ACCOUNT_EMAIL_REQUIRED = True
 # ACCOUNT_UNIQUE_EMAIL = True
+
+# ADMIN TOOLS CONFIGS
+# ------------------------------------------------------------------------------
+ADMIN_TOOLS_INDEX_DASHBOARD = {
+    "django.contrib.admin.site": "django_tatum.django_admin_dashboard.CustomIndexDashboard",
+    "django_tatum.admin.admin_site": "django_tatum.tatum_admin_dashboard.CustomIndexDashboard",
+}
+
+ADMIN_TOOLS_APP_INDEX_DASHBOARD = {
+    "django.contrib.admin.site": "django_tatum.django_admin_dashboard.CustomIndexDashboard",
+    "django_tatum.admin.admin_site": "django_tatum.tatum_admin_dashboard.CustomIndexDashboard",
+}
+
+ADMIN_TOOLS_MENU = {
+    "django.contrib.admin.site": "django_tatum.django_admin_menu.CustomMenu",
+    "django_tatum.admin.admin_site": "django_tatum.tatum_admin_menu.CustomMenu",
+}
