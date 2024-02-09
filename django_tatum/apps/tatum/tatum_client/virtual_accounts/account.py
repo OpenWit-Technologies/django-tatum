@@ -1,22 +1,25 @@
-"""Virtual Account handler"""
 import json
 
-from requests import Response
 from typing import Any
 from typing import Union
+from requests import Response
 
-
-from django_tatum.apps.tatum.tatum_client.exceptions.virtual_account_exceptions import (
-    MissingparameterException,
-)
+from django_tatum.apps.tatum.tatum_client.exceptions.virtual_account_exceptions import MissingparameterException
 from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import AccountQueryDict
+from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import CustomerRegistrationDict
+from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import CreateAccountXpubDict
 from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import BatchAccountDict
 from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import CreateAccountDict
-from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import CreateAccountXpubDict
 from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import UpdateAccountDict
-
 from django_tatum.apps.tatum.tatum_client.virtual_accounts.base import BaseRequestHandler
+from django_tatum.apps.tatum.tatum_client.wallet_generation.crypto_wallets.wallet_dicts import WALLET_CLASSES
+from django_tatum.apps.tatum.tatum_client.wallet_generation.crypto_wallets.wallet_dicts import WALLET_GENERATE_METHODS
+from django_tatum.apps.tatum.tatum_client.wallet_generation.crypto_wallets.wallet_dicts import WalletType
+from django_tatum.apps.tatum.utils.response_handlers import handle_response_object
 
+
+# TODO: Modify all methods to handle all respnse types
+# TODO: Refactor "account/ledger" url prefix to avoid repetition.
 # TODO: Error handling
 
 
@@ -93,81 +96,47 @@ class TatumVirtualAccounts(BaseRequestHandler):
         response = self.Handler.post(data)
         return response.json()
 
+    # ToDo: Create a method for creating bulk accounts with xpub.
     def generate_virtual_account_with_xpub(
         self,
-        data: CreateAccountXpubDict,
+        currency: str,
+        compliant: bool,
+        accounting_currency_all_accounts: str,
+        xpub: str,
+        external_id: str,
+        accounting_currency_single_account: str,
+        customer_country: str,
+        provider_country: str,
+        account_number: str = None,
+        account_code: str = None,
     ) -> Response:
-        """Create a virtual account by using an extended public key.
+        customer_info: CustomerRegistrationDict = {}
 
-        Args:
-            data (CreateAccountXpubDict): Params required by
-            Tatum API to create a virtual account usin an extended public key.
-            Some are optional, and are marked as such below.
+        customer_info["accountingCurrency"] = accounting_currency_single_account
+        customer_info["customerCountry"] = customer_country
+        customer_info["providerCountry"] = provider_country
+        customer_info["externalId"] = external_id
 
-            CreateAccountXpubDict is a typed dict with the following params:
-                currency (str): The currency for the virtual account.
-                See [https://apidoc.tatum.io/tag/Account#operation/createAccount] for the list of supported assets.
-                - compliant (bool): Enable compliant checks.
-                    If this is enabled, it is impossible to create account if compliant check fails.
-                - accountCode (str)
-                - accountingCurrency (str)
-                - accountNumber (str)
-                - xpub (str): The extended public key.
-                - customer (optional CustomerRegistrationDict):
-                A typed dictionary with the following args:
-                    -- externalId: (required str):
-                        The external ID of the customer;
-                        use only anonymized identification that you have in your system
-                        If a customer with the specified external ID does not exist, a new customer is created.
-                        If a customer with the specified external ID exists, it is updated with the provided information.
-                    -- accountingCurrency: (optional str (FiatCurrency)):
-                        Default: "EUR".
-                        This is the ISO 4217 code of the currency in which all
-                        transactions for all virtual accounts of the customer will be billed;
-                        to overwrite the currency for this specific virtual account,
-                        set the accountingCurrency parameter at the account level.
-                        See [https://apidoc.tatum.io/tag/Account#operation/createAccount] for the list of supported currencies.
-                    -- customerCountry: (optional str):
-                        The ISO 3166-1 code of the country that the customer has to be compliant with.
-                        Max is set to 2 characters.
-                    -- providerCountry: (optional str):
-                        The ISO 3166-1 code of the country that the service provider has to be compliant with.
-                        Max is set to 2 characters.
+        payload: CreateAccountXpubDict = {
+            "currency": currency,
+            "accountingCurrency": accounting_currency_all_accounts,
+            "compliant": compliant,
+            "customer": customer_info,
+            "xpub": xpub,
+        }
+        if account_code is not None:
+            payload["accountcode"] = account_code
+        if account_number is not None:
+            payload["accountNumber"] = account_number
 
-        Returns:
-            Response: _description_
-        """
         self.setup_request_handler("ledger/account")
-        response = self.Handler.post(data)
-        return response.json()
+        response = handle_response_object(self.Handler.post(payload))
+        return response
 
     def list_all_virtual_accounts(
         self,
         query: AccountQueryDict = None,
     ) -> Response:
-        """Lists all accounts. Inactive accounts are also visible.
-
-        Args:
-            query (AccountQueryDict, optional): A typed dict tith the following parameters:
-            - page_size: (optional int): Max number of items per page is 50.
-            - page: (optional int): Page Number.
-            - sort: (optional str): Direction of sorting. Can be 'asc' or 'desc'.
-            - sort_by: (optional str): Sort by Enums: "id", "account_number", "account_balance", or "available_balance".
-            - active: (optional bool): Filter only active or non active accounts
-            - only_non_zero_balance: (optional bool): Filter only accounts with non zero balances
-            - frozen: (optional bool): Filter only frozen or non frozen accounts.
-            - currency: (optional str): Filter by currency.
-            - account_number: (optional str): Filter by account number
-
-            Defaults to None.
-
-        Raises:
-            ValueError: Raised when an invalid query parameter is provided.
-
-        Returns:
-            200 Response: An array of a JSON object.
-
-        """
         self.setup_request_handler("ledger/account")
         if query is None:
             query = {}
@@ -196,6 +165,36 @@ class TatumVirtualAccounts(BaseRequestHandler):
         self._write_json_to_file(filename="all_virtual_accounts.json", response=response.json())
         return json.dumps(response.json())
 
+    # Doesnt work as expected.
+    def list_all_customers_inactive_virtual_accounts(
+        self,
+        customer_id: str = None,
+        page_size: int = 10,
+        page: int = 0,
+        sort: str = "desc",
+        sort_by: str = "id",
+        # active: bool = False,
+    ) -> Response:
+        self.setup_request_handler("ledger/account")
+        expected_params = {
+            "page_size": page_size,
+            "page": page,
+            "sort": sort,
+            "sort_by": sort_by,
+        }
+        # "active": active,
+
+        all_inactive_accounts = self.Handler.get(params=json.dumps(expected_params))
+        self._write_json_to_file(filename="all_inactive_virtual_accounts.json", response=all_inactive_accounts.json())
+        customer_accounts = [
+            account
+            for account in all_inactive_accounts.json()
+            if account.get("customerId") == customer_id and not account.get("active", True)
+        ]
+
+        # return json.dumps(all_inactive_accounts.json())
+        return {"accounts": customer_accounts}
+
     def get_account_entities_count(
         self,
         query: AccountQueryDict = None,
@@ -218,22 +217,8 @@ class TatumVirtualAccounts(BaseRequestHandler):
         return json.dumps(response.json())
 
     def get_account_balance(self, account_id: str):
-        """
-        This method is used to get the balance of a specific account.
-
-        It sends a GET request to the '/ledger/account/{account_id}/balance' endpoint of the Tatum API.
-
-        Args:
-            account_id (str): The ID of the account.
-
-        Returns:
-            dict: A dictionary containing the balance of the account.
-
-        Raises:
-            ValueError: If the account_id is not provided.
-        """
-        if not account_id:
-            raise ValueError("MissingParameterError. account_id must be specified.")
+        if account_id is None:
+            return f"MissingParameterErrror. {account_id} must be specified."
 
         self.setup_request_handler(f"ledger/account/{account_id}/balance")
         response = self.Handler.get()
@@ -243,21 +228,7 @@ class TatumVirtualAccounts(BaseRequestHandler):
         self,
         account_id: str,
     ) -> dict[str, str]:
-        """
-        This method is used to get the details of a specific account.
-
-        It sends a GET request to the '/ledger/account/{account_id}' endpoint of the Tatum API.
-
-        Args:
-            account_id (str): The ID of the account.
-
-        Returns:
-            dict: A dictionary containing the details of the account.
-
-        Raises:
-            ValueError: If the account_id is not provided.
-        """
-        if not account_id:
+        if account_id is None:
             raise MissingparameterException([account_id], "Missing parameter.")
 
         self.setup_request_handler(f"ledger/account/{account_id}")
@@ -268,20 +239,6 @@ class TatumVirtualAccounts(BaseRequestHandler):
         self,
         accounts: list[BatchAccountDict],
     ):
-        """
-        This method is used to create multiple accounts at once.
-
-        It sends a POST request to the '/ledger/account/batch' endpoint of the Tatum API.
-
-        Args:
-            account_data (list): A list of dictionaries, each containing the data for a new account.
-
-        Returns:
-            list: A list of dictionaries, each containing the details of a newly created account.
-
-        Raises:
-            ValueError: If the account_data is not provided or is not a list.
-        """
         self.setup_request_handler("ledger/account/batch")
         payload: dict[str, Any] = {
             "accounts": accounts,
@@ -292,6 +249,11 @@ class TatumVirtualAccounts(BaseRequestHandler):
         print(response.json())
         return response.json()
 
+    # TodO: methods to list:
+    # 1. all active accounts,
+    # 2. frozen accounts,
+    # 3. currency based account,
+    # 4. nonZeroBalanced accoounts of customers by using the filters in list_all_virtual_accounts
     def list_all_customer_accounts(
         self,
         customer_id: str,
@@ -299,10 +261,8 @@ class TatumVirtualAccounts(BaseRequestHandler):
         page_size: int = 10,
         offset: int = 0,
     ):
-        """This method is used to list all accounts associated with a specific customer.
+        """Lists all accounts associated with a customer.
         Only active accounts are visible.
-
-        It sends a GET request to the '/ledger/customer/{customer_id}/accounts' endpoint of the Tatum API.
 
         Args:
             customer_id (str): The internal customer ID supplied when creating a virtual account.
@@ -311,10 +271,7 @@ class TatumVirtualAccounts(BaseRequestHandler):
             offset (int, optional): _description_. Defaults to 0.
 
         Returns:
-            list: A list of dictionaries, each representing an account associated with the customer.
-
-        Raises:
-            ValueError: If the customer_id is not provided.
+            _type_: _description_
         """
         self.setup_request_handler(f"ledger/account/customer/{customer_id}")
         self.Handler.headers.pop("Content-Type")
@@ -337,20 +294,16 @@ class TatumVirtualAccounts(BaseRequestHandler):
         account_code: str = None,
         account_number: str = None,
     ):
-        """This method is used to update the account code or account number of a specific virtual account from an external system.
-
-        It sends a PUT request to the '/v3/virtualaccount/{account_id}' endpoint of the Tatum API.
+        """Update the account code or account number from an external system.
 
         Args:
             account_id (str): The Account ID of the virtual account to be updated. The account ID cannot be updated.
-            account_code Optional(str): The new account code to be associated with the account ID.
+            account_code Optional(str): The new account code to be associated
+                with the account ID.
             account_number Optional(str): The new account
 
         Returns:
-            dict: A dictionary containing the updated details of the virtual account.
-
-        Raises:
-            ValueError: If the account_id or account_data is not provided.
+            _type_: _description_
         """
         self.setup_request_handler(f"ledger/account/{account_id}")
         payload: UpdateAccountDict = {
@@ -372,10 +325,7 @@ class TatumVirtualAccounts(BaseRequestHandler):
         type: list[int],
         description: str = None,
     ):
-        """This method is used to block a specific amount in a virtual account.
-
-        It sends a POST request to the '/v3/virtualaccount/{account_id}/block' endpoint of the Tatum API.
-
+        """Blocks an amount in an account.
         Any number of distinct amounts can be blocked in one account.
         Every new blockage has its own distinct ID,
         which is used as a reference.
@@ -403,10 +353,7 @@ class TatumVirtualAccounts(BaseRequestHandler):
                 being applied. Defaults to None.
 
         Returns:
-            dict: A dictionary containing the id of the block operation. This is the Blocakge ID.
-
-        Raises:
-            ValueError: If the account_id or amount is not provided.
+            _type_: _description_
         """
         self.setup_request_handler(f"ledger/account/block/{id}")
         payload: dict[str, Union[str, list]] = {
@@ -476,9 +423,6 @@ class TatumVirtualAccounts(BaseRequestHandler):
                 }
                 The reference is a unique identifier of the transaction within the virtual account);\
                     if the transaction fails, you can use this reference to search through the Tatum logs.
-
-        Raises:
-            ValueError: If the account_id, amount, or transaction_data is not provided.
         """
         self.setup_request_handler(f"ledger/account/block/{blockage_id}")
         # Only add the optional parameters to the payload if they are supplied
@@ -559,6 +503,11 @@ class TatumVirtualAccounts(BaseRequestHandler):
             offset (int, optional): Offset to obtain the next page of data.
             Defaults to None, which Tatum interpretes as offset=0.
 
+        Raises:
+            ValueError: If a value greater than 50 is passed for page-size,
+            a value error is returned to save the user the round trip to Tatum,
+            who will eventually return a 400 response :).
+
         Returns:
             list[dict[str, str]]: An array of blockage ids & blockage details.
                 200 Response Sample:
@@ -581,11 +530,6 @@ class TatumVirtualAccounts(BaseRequestHandler):
                             This can be a code or an identifier from an external
                             system or a short description of the blockage.
                 description (str): The description provided during the blocakge.
-
-        Raises:
-            ValueError: If a value greater than 50 is passed for page-size,
-            a value error is returned to save the user the round trip to Tatum,
-            who will eventually return a 400 response :).
         """
         if page_size > 50:
             raise ValueError("Page size cannot be greater than 50.")
@@ -609,8 +553,6 @@ class TatumVirtualAccounts(BaseRequestHandler):
     ) -> dict["str, str"]:
         """Gets blocked amount by id.
 
-        It sends a GET request to the '/v3/virtualaccount/{account_id}/blocked' endpoint of the Tatum API.
-
         Returns:
             dict[str, str]: The response object from Tatum.
                 200 Response Sample:
@@ -629,9 +571,6 @@ class TatumVirtualAccounts(BaseRequestHandler):
                 amount (str): The amount blocked on the account
                 type (str): The ID of the blockage
                 description (str): The ID of the blockage
-
-        Raises:
-            ValueError: If the blockage_id is not provided.
         """
         self.setup_request_handler(f"ledger/account/block/{blockage_id}/detail")
         response: Response = self.Handler.get()
@@ -641,9 +580,7 @@ class TatumVirtualAccounts(BaseRequestHandler):
         self,
         account_id: str,
     ) -> dict[str, Union[str, int]]:
-        """This method is used to activate a specific virtual account.
-
-        It sends a PUT request to the '/v3/virtualaccount/{account_id}/activate' endpoint of the Tatum API.
+        """Activates an account.
 
         Args:
             account_id (str): The account ID to be activated.
@@ -656,7 +593,7 @@ class TatumVirtualAccounts(BaseRequestHandler):
         if response.status_code == 204:
             response_object: dict[str, str] = {
                 "message": "Account activated successfully.",
-                "status_code": 204,
+                "status_code": 200,
             }
             return response_object
         return response.json()
@@ -665,59 +602,44 @@ class TatumVirtualAccounts(BaseRequestHandler):
         self,
         account_id: str,
     ) -> dict[str, Union[str, int]]:
-        """This method is used to deactivate a specific virtual account.
-
-        It sends a PUT request to the '/v3/virtualaccount/{account_id}/deactivate' endpoint of the Tatum API.
-
-        Only accounts with account and available balances of zero can be deactivated.\
-        Accounts with negative balances cannot be deactivated. \
-        Deactivated accounts are not visible in the list of accounts, it is not possible to send funds to \
-        these accounts or perform transactions. \
-        However, they are still present in the ledger as well as all their transaction histories.
+        """Deactivates an account. Only accounts with account and available balances of zero can be deactivated.\
+            Accounts with negative balances cannot be deactivated. \
+            Deactivated accounts are not visible in the list of accounts, it is not possible to send funds to \
+            these accounts or perform transactions. \
+            However, they are still present in the ledger as well as all their transaction histories.
 
         Args:
             account_id (str): The account ID to be deactivated.
 
         Returns:
-            dict[str, any]: A dictionary containing the details of the deactivation operation.
-
-        Raises:
-            ValueError: If the account_id is not provided.
+            dict[str, str]: _description_
         """
         self.setup_request_handler(f"ledger/account/{account_id}/deactivate")
         response: Response = self.Handler.put()
         if response.status_code == 204:
             response_object: dict[str, Union[str, int]] = {
-                "message": "Account deactivated successfully.",
+                "message": f"Account '{account_id}' deactivated successfully.",
                 "status_code": 204,
             }
             return response_object
+        print(response.json())
         return response.json()
 
     def freeze_account(
         self,
         account_id: str,
     ) -> dict[str, Union[str, int]]:
-        """
-        This method is used to freeze a specific virtual account.
-
-        It sends a PUT request to the '/v3/virtualaccount/{account_id}/freeze' endpoint of the Tatum API.
-
-        It disables all outgoing transactions.
+        """Disables all outgoing transactions. \
         Incoming transactions to the account are available.
-        When an account is frozen, it's available balance is set to 0. Note that a frozen account is still ACTIVE.
-
-        This operation will create a new blockage of type ACCOUNT_FROZEN, which is automatically
+        When an account is frozen, its available balance is set to 0. Not that a frozen account is still ACTIVE.
+        This operation will create a new blockage of type ACCOUNT_FROZEN, which is automatically \
         deleted when the account is unfrozen.
 
         Args:
             account_id (str): The account ID to be frozen.
 
         Returns:
-            dict[str, any]: A dictionary containing the details of the freeze operation.
-
-        Raises:
-            ValueError: If the account_id is not provided.
+            dict[str, str]: _description_
         """
         self.setup_request_handler(f"ledger/account/{account_id}/freeze")
         response: Response = self.Handler.put()
@@ -733,11 +655,9 @@ class TatumVirtualAccounts(BaseRequestHandler):
         self,
         account_id: str,
     ) -> dict[str, Union[str, int]]:
-        """This method is used to unfreeze a specific virtual account.
-
-        It sends a PUT request to the '/v3/virtualaccount/{account_id}/unfreeze' endpoint of the Tatum API.
-
-        This operation will delete the ACCOUNT_FROZEN blockage, which was created when the account was frozen.
+        """Unfreezes a previously frozen account. \
+        This operation will delete the ACCOUNT_FROZEN blockage, \
+            which was created when the account was frozen.
 
         Unfreezing a non-frozen account will not affect the account.
 
@@ -745,10 +665,7 @@ class TatumVirtualAccounts(BaseRequestHandler):
             account_id (str): The account ID to be unfrozen.
 
         Returns:
-            dict[str, str]: A dictionary containing the details of the unfreeze operation.
-
-        Raises:
-            ValueError: If the account_id is not provided.
+            dict[str, str]: _description_
         """
         self.setup_request_handler(f"ledger/account/{account_id}/unfreeze")
         response: Response = self.Handler.put()
@@ -759,6 +676,74 @@ class TatumVirtualAccounts(BaseRequestHandler):
             }
             return response_object
         return response.json()
+
+    def generate_virtual_account_as_deposit_address(
+        self,
+        compliant: bool,
+        accounting_currency_all_accounts: str,
+        external_id: str,
+        accounting_currency_single_account: str,
+        customer_country: str,
+        provider_country: str,
+        currency: str = "ETH",
+        account_number: str = None,
+        account_code: str = None,
+    ):
+        """Generates a new virtual account as a deposit address for a specific currency.
+        The account currency is ETH by default, but can be any of Tatum supported crypto currencies.
+
+        Args:
+            compliant (bool): Enable compliant checks. If this is enabled, it is impossible to create a virtual \
+                account if compliant check fails.
+            accounting_currency_all_accounts (str): Accounting currency for all accounts.
+            external_id (str): External ID of the customer.
+            accounting_currency_single_account (str): Accounting currency for the account.
+            customer_country (str): Customer country.
+            provider_country (str): Provider country.
+            currency (str, optional): Currency of the virtual account. Defaults to "ETH".
+            account_code (str, optional): For bookkeeping to distinct account purpose. 1 - 50 characters. Defaults to None.
+            account_number (str, optional): Account number for all accounts. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
+        self.setup_request_handler("ledger/account/deposit/address")
+        payload: dict[str, Union[str, bool]] = {
+            "compliant": compliant,
+            "accounting_currency_all_accounts": accounting_currency_all_accounts,
+            "external_id": external_id,
+            "accounting_currency_single_account": accounting_currency_single_account,
+            "customer_country": customer_country,
+            "provider_country": provider_country,
+            "currency": currency,
+        }
+
+        if account_code is not None:
+            payload["account_code"] = account_code
+        if account_number is not None:
+            payload["account_number"] = account_number
+
+        try:
+            selected_wallet_type = WalletType[currency]
+        except KeyError as error:
+            raise ValueError(f"Invalid wallet currency type: {currency}") from error
+
+        # Access the corresponding wallet class and create an instance
+        selected_wallet_class = WALLET_CLASSES[selected_wallet_type]()
+        # Access the corresponding generate method and call it on the instance
+        generate_method_name = WALLET_GENERATE_METHODS[selected_wallet_type]
+
+        # Map the enum value to the corresponding `generate` method associated with the wallet class
+        wallet_generation_method = getattr(selected_wallet_class, generate_method_name)
+        wallet = wallet_generation_method()
+
+        payload["xpub"] = wallet.get("xpub", None)
+
+        virtual_account_with_xpub = self.generate_virtual_account_with_xpub(**payload)
+        if virtual_account_with_xpub["status_code"] == 200:
+            virtual_account_with_xpub["mnemonic"] = wallet.get("mnemonic")
+
+        return virtual_account_with_xpub
 
 
 # ---
@@ -780,35 +765,45 @@ creatr_bulk_account_payload = {
     ]
 }
 
-test_xpub: str = "xpub6FJnrHDNdwdeHxT7eNC3c2oLiCBFg6hezyrzCNrqVXGDHDqsUBbeRdGaFyJxUbqusqAFX6K2ihXJwyCQn1MX3Vrdh1ekUizUkK7PXBEuoCU"
-
 create_account_payload = {
-    "currency": "ETH",
+    "currency": "MATIC",
     "customer": {
-        "externalId": "123456789",
-        "accountingCurrency": "USD",
-        "customerCountry": "US",
-        "providerCountry": "US",
+        "externalId": "cus-0000000002",
+        "accountingCurrency": "GBP",
+        "customerCountry": "GB",
+        "providerCountry": "GB",
     },
     "compliant": True,
-    "accountCode": "123456789",
-    "accountingCurrency": "USD",
-    "accountNumber": "123456789",
+    "accountCode": "AcC-0000000002",
+    "accountingCurrency": "GBP",
+    "accountNumber": "0000000003",
+}
+
+create_va_as_deposit_address = {
+    "compliant": True,
+    "accounting_currency_all_accounts": "GBP",
+    "external_id": "cus-0000000003",
+    "accounting_currency_single_account": "GBP",
+    "customer_country": "GB",
+    "provider_country": "GB",
+    "currency": "ETH",
+    "account_code": "AcC-0300000001",
+    "account_number": "3000000001",
 }
 
 create_account_with_xpub_payload = {
     "currency": "ETH",
-    "xpub": test_xpub,
+    "xpub": "xpub6DhT4tyhHZX5dFgTGNyEEEmkgtwbBwT5xim5rjNEiTwF6z7Q2qKTsz2eQQ36ppF5NpG1ggxwim5b3i58W1vYVysVrKMDFFNjJWxU1b4EZES",
     "customer": {
-        "externalId": "123456789",
-        "accountingCurrency": "USD",
-        "customerCountry": "US",
-        "providerCountry": "US",
+        "externalId": "cus-0000000001",
+        "accountingCurrency": "GBP",
+        "customerCountry": "GB",
+        "providerCountry": "GB",
     },
     "compliant": True,
-    "accountCode": "123456789",
-    "accountingCurrency": "USD",
-    "accountNumber": "123456789",
+    "accountCode": "AcC-0000000001",
+    "accountingCurrency": "GBP",
+    "accountNumber": "0000000004",
 }
 
 block_account_payload = {
@@ -818,16 +813,26 @@ block_account_payload = {
 
 
 list_all_account_payload = {"active": True}
+list_all_inactive_accounts_payload = {
+    "page_size": 10,
+    "page": 0,
+    "sort": "desc",
+    "sort_by": "id",
+    "customer_id": "656c875418bc5b7c8b0b15b6",
+    # "active": False,
+}
 
 if __name__ == "__main__":
     tva = TatumVirtualAccounts()
     # print(tva.generate_virtual_account_no_xpub(data=create_account_payload))
     # print(tva.generate_virtual_account_with_xpub(data=create_account_with_xpub_payload))
     # print(tva.list_all_virtual_accounts(list_all_account_payload))
+    # print(tva.list_all_customers_inactive_virtual_accounts(**list_all_inactive_accounts_payload))
+    # print(tva.list_all_virtual_accounts())
     # print(tva.get_account_entities_count())
     # print(tva.get_account_balance(account_id="6533086644a445035296fe18"))
     # print(tva.create_batch_accounts(accounts=creatr_bulk_account_payload["accounts"]))
-    # print(tva.list_all_customer_accounts(account_id="653307d18c610c9e0ef45940"))
+    # print(tva.list_all_customer_accounts(customer_id="656c8e7e6b04478256b65d24"))
 
     # print(
     #     tva.update_virtual_account(
@@ -837,7 +842,7 @@ if __name__ == "__main__":
     #     )
     # )
 
-    # print(tva.get_account_by_id("653307d18c610c9e0ef4593f"))
+    # print(tva.get_account_by_id("656c8e7e6b04478256b65d23"))
 
     # print(
     #     tva.block_amount_in_account(
@@ -855,11 +860,12 @@ if __name__ == "__main__":
     #     )
     # )  # Not tried this out. TODO: Need to add money from faucets perhaps.
     # print(tva.get_blocked_amounts_for_an_account(account_id="653307d18c610c9e0ef4593f"))
-    # print(tva.unblock_amount_in_an_account(blockage_id="65386475d8b1ad42ce2af684"))
+    # print(tva.unblock_amount_in_an_account(blockage_id="653efae9f06e25d86dc974d0"))
     # print(tva.get_blocked_amount_by_id(blockage_id="653efae9f06e25d86dc974d0"))
-    # print(tva.deactivate_account(account_id="6533086644a445035296fe18"))
+    # print(tva.deactivate_account(account_id="6548e13318af3138b75f0b81"))
     # print(tva.activate_account(account_id="6533086644a445035296fe18"))
     # print(tva.freeze_account(account_id="6533086644a445035296fe18"))
     # print(tva.unfreeze_account(account_id="6533086644a445035296fe18"))
 
     # print(tva.list_all_customer_accounts(customer_id="653307d18c610c9e0ef45940"))
+    print(tva.generate_virtual_account_as_deposit_address(**create_va_as_deposit_address))

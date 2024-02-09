@@ -1,0 +1,16 @@
+[
+    {
+        "currency": "BTC",
+        "active": true,
+        "balance": {
+            "accountBalance": "0",
+            "availableBalance": "-10"
+        },
+        "accountCode": "013791914",
+        "accountNumber": "0137492934",
+        "frozen": false,
+        "customerId": "653307d18c610c9e0ef45940",
+        "accountingCurrency": "EUR",
+        "id": "653307d18c610c9e0ef4593f"
+    }
+]

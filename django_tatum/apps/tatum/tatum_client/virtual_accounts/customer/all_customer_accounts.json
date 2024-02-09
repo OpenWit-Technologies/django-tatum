@@ -1,0 +1,6 @@
+{
+    "statusCode": 404,
+    "errorCode": "account.not.found",
+    "message": "There is no account associated with that customer.",
+    "dashboardLog": "https://dashboard.tatum.io/logs?id=655bb65b146543d6d264401e"
+}

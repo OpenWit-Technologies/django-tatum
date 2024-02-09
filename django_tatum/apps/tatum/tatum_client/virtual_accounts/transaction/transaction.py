@@ -1,51 +1,105 @@
-from django_tatum.apps.tatum.tatum_client.virtual_accounts.base import (
-    BaseRequestHandler,
-)
-from django_tatum.apps.tatum.tatum_client.types.transaction_types import (
-    SendPaymentDict,
-    BatchPaymentDict,
-    FindTransactionDict,
-    FindCustomerTransactionDict,
-    FindLedgerTransactionDict,
-)
+"""These endpoints are used to create and list transactions within Tatum Private Ledger.
+These transactions are performed between 2 accounts with the same currency.
+To perform an exchange operation between accounts with different currencies,
+use the 'Order Book' API calls."""
 
-# from django_tatum.apps.tatum.utils.utility import validate_required_fields
+from django_tatum.apps.tatum.tatum_client.types.transaction_types import BatchPaymentDict
+from django_tatum.apps.tatum.tatum_client.types.transaction_types import FindCustomerTransactionDict
+from django_tatum.apps.tatum.tatum_client.types.transaction_types import FindLedgerTransactionDict
+from django_tatum.apps.tatum.tatum_client.types.transaction_types import FindTransactionDict
+from django_tatum.apps.tatum.tatum_client.types.transaction_types import SendPaymentDict
+from django_tatum.apps.tatum.tatum_client.virtual_accounts.base import BaseRequestHandler
+from django_tatum.apps.tatum.utils.response_handlers import handle_response_object
 
 
 class TatumTransactions(BaseRequestHandler):
+    """Tatum Private Ledger supports microtransactions - a transaction of an amount as little as 1e-30 (30 decimal places).
+    Transactions are atomic.
+    When there is an insufficient balance in the sender account, or recipient account cannot receive funds,
+    the transaction is not settled."""
+
     def __init__(self):
         self.setup_request_handler("ledger/transaction")
         super().__init__()
 
     def send_payment(
         self,
-        data: SendPaymentDict = None,
+        sender_account_id: str,
+        recipient_account_id: str,
+        amount: str,
+        anonymous: bool = False,
+        compliant: bool = True,
+        transaction_code: str = None,
+        payment_id: str = None,
+        recipient_note: str = None,
+        base_rate: int = 1,
+        sender_note: str = None,
     ):
-        """Send a payment transaction.
+        """Send payments within the TATUM PRIVATE ledger. All assets are settled instantly.
+         This method is only used for transferring assets between accounts within Tatum and
+         will not send any funds to blockchain addresses.
+
+         When a transaction is settled, 2 transaction records are created,
+         1 for each of the participants.
+         These 2 records are connected via a transaction reference, which is the same for both of them.
 
         Args:
-            data (SendPaymentDict): Parameters required by Tatum API to send a payment.
-                The structure of SendPaymentDict includes:
-                    senderAccountId: str
-                    amount: float
-                    currency: str
-                    paymentId: str
-                    recipientNote: str
-                    senderNote: str
+            sender_account_id (str): Internal sender account ID within Tatum platform.
+            recipient_account_id (str): Internal recipient account ID within Tatum platform
+            amount (str): Amount to be sent.
+            anonymous (bool, optional): Anonymous transaction does not show sender account to recipient.
+                Defaults to false
+            compliant (bool, optional): Enable compliant checks. Transaction will not be processed, if compliant check fails.
+                Defaults to None.
+            transaction_code (str, optional): For bookkeeping to distinct transaction purpose.
+                Defaults to None.
+            payment_id (str, optional): Payment ID, External identifier of the payment,
+                which can be used to pair transactions within Tatum accounts.
+                Defaults to None.
+            recipient_note (str, optional): Note visible to both, sender and recipient.
+                Defaults to None.
+            base_rate (int, optional): Exchange rate of the base pair.
+                Only applicable for Tatum's Virtual currencies Ledger transactions.
+                Override default exchange rate for the Virtual Currency.
+                Defaults to 1.
+            sender_note (str, optional): Note visible to sender.
+                Defaults to None.
 
         Returns:
-            Response: The response object containing transaction information.
+            _type_: JSON object containing the internal reference to the transaction (a unique identifier of
+                the transaction within the virtual account);
+                if the transaction fails, use this reference to search through the logs.
         """
 
         self.setup_request_handler("ledger/transaction")
-        response = self.Handler.post(data)
+        data: SendPaymentDict = {
+            "senderAccountId": sender_account_id,
+            "recipientAccountId": recipient_account_id,
+            "amount": amount,
+        }
+        if anonymous:
+            data["anonymous"] = anonymous
+        if compliant:
+            data["compliant"] = compliant
+        if transaction_code:
+            data["transactionCode"] = transaction_code
+        if payment_id:
+            data["paymentId"] = payment_id
+        if recipient_note:
+            data["recipientNote"] = recipient_note
+        if base_rate:
+            data["baseRate"] = base_rate
+        if sender_note:
+            data["senderNote"] = sender_note
+
+        response = handle_response_object(self.Handler.post(data))
         return response.json()
 
     def send_batch_payment(
         self,
         data: BatchPaymentDict = None,
     ):
-        """Send a batch payment transaction.
+        """Sends the 'N' payments within Tatum Private Ledger. All assets are settled instantly.
 
         Args:
             data (BatchPaymentDict): Parameters required by Tatum API to send a batch payment.
@@ -55,7 +109,10 @@ class TatumTransactions(BaseRequestHandler):
         Returns:
             Response: The response object containing transaction information.
         """
-        return self.extracted_from_send_payment("ledger/transaction/batch", data)
+        self.setup_request_handler("ledger/transaction/batch")
+        response = self.Handler.post(data)
+
+        return response.json()
 
     def find_transaction_for_account(
         self,
@@ -335,7 +392,7 @@ find_transaction_within_ledger_payload = {
 
 if __name__ == "__main__":
     tat = TatumTransactions()
-    # print(tat.send_payment(data=send_payment_payload))
+    print(tat.send_payment(data=send_payment_payload))
     # print(tat.send_batch_payment(data=send_batch_payment_payload))
     # print(tat.find_transaction_for_account(data=find_transaction_for_account_payload))
     # print(tat.find_transaction_accross_all_customer_accounts(data=find_transaction_accross_all_customer_accounts_payload))
