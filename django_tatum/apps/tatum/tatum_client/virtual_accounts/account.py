@@ -12,9 +12,9 @@ from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import Bat
 from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import CreateAccountDict
 from django_tatum.apps.tatum.tatum_client.types.virtual_account_types import UpdateAccountDict
 from django_tatum.apps.tatum.tatum_client.virtual_accounts.base import BaseRequestHandler
-from django_tatum.apps.tatum.tatum_client.wallet_generation.crypto_wallets.wallet_dicts import WALLET_CLASSES
-from django_tatum.apps.tatum.tatum_client.wallet_generation.crypto_wallets.wallet_dicts import WALLET_GENERATE_METHODS
-from django_tatum.apps.tatum.tatum_client.wallet_generation.crypto_wallets.wallet_dicts import WalletType
+from django_tatum.apps.tatum.tatum_client.blockchain.crypto_wallets.wallet_dicts import WALLET_CLASSES
+from django_tatum.apps.tatum.tatum_client.blockchain.crypto_wallets.wallet_dicts import WALLET_GENERATE_METHODS
+from django_tatum.apps.tatum.tatum_client.blockchain.crypto_wallets.wallet_dicts import WalletType
 from django_tatum.apps.tatum.utils.response_handlers import handle_response_object
 
 

@@ -78,9 +78,7 @@ def validate_or_modify_currency_name(name: str):
     if len(name) > 30:
         raise ValueError("name value cannot be more than 30 characters")
     if len(name) >= 28 and not name.startswith("VC_"):
-        raise ValueError(
-            "Name character length must be less than 28 if not prepended with `VC_`. Please provide a shorter name."
-        )
+        raise ValueError("Name character length must be less than 28 if not prepended with `VC_`. Please provide a shorter name.")
     if len(name) <= 27 and not name.startswith("VC_"):
         if name.startswith("vc_"):
             name = name.replace("vc_", "VC_", 1)

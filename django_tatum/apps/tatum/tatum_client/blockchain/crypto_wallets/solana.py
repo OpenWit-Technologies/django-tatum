@@ -15,7 +15,6 @@ Handler = RequestHandler(
 
 
 class SolanaWallet:
-
     def __init__(self):
         self.requestUrl = f"{creds.TATUM_BASE_URL}solana/wallet"
 
