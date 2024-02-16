@@ -5,6 +5,7 @@ from enum import Enum
 
 class FiatAndCryptoCurrency(Enum):
     """Enum representing accepted currencies"""
+
     AED = "AED"
     AFN = "AFN"
     ALL = "ALL"
